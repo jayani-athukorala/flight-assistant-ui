@@ -46,3 +46,4 @@ export const cancelBooking = async (
 
     return response.data;
 };
+

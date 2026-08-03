@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import PageContainer from "../components/layout/PageContainer";
 import PageTitle from "../components/common/PageTitle";
 import { getFlights } from "../api/flightService";
+import FlightCard from "../components/flights/FlightCard";
 
 interface Flight {
     id: number;
@@ -78,55 +79,25 @@ const FlightsPage = () => {
                 <div className="grid gap-4">
 
 
-                    {flights.map((flight)=>(
+                    <div className="
+grid
+md:grid-cols-2
+lg:grid-cols-3
+gap-6
+">
 
-                        <div
-                            key={flight.id}
-                            className="border rounded-lg p-5"
-                        >
+                        {
+                            flights.map((flight)=>(
 
-                            <h3 className="text-xl font-bold">
-                                {flight.flightNumber}
-                            </h3>
+                                <FlightCard
+                                    key={flight.id}
+                                    flight={flight}
+                                />
 
+                            ))
+                        }
 
-                            <p>
-                                Destination:
-                                {" "}
-                                {flight.destination}
-                            </p>
-
-
-                            <p>
-                                Departure:
-                                {" "}
-                                {flight.departureTime}
-                            </p>
-
-
-                            <p>
-                                Arrival:
-                                {" "}
-                                {flight.arrivalTime}
-                            </p>
-
-
-                            <p>
-                                Price:
-                                {" "}
-                                ${flight.price}
-                            </p>
-
-
-                            <p>
-                                Status:
-                                {" "}
-                                {flight.status}
-                            </p>
-
-                        </div>
-
-                    ))}
+                    </div>
 
 
                 </div>
