@@ -4,10 +4,7 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
     label: string;
 }
 
-const Input = ({
-                   label,
-                   ...props
-               }: InputProps) => {
+const Input = ({label, ...props }: InputProps) => {
     return (
         <div className="space-y-2">
             <label className="block font-medium text-slate-700">

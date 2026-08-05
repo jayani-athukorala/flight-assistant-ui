@@ -1,108 +1,102 @@
 import { useState } from "react";
 import type { Flight } from "../../types/Flight";
 
-import Card from "../common/Card";
-import Button from "../common/Button";
-
 import BookingModal from "./BookingModal";
-
+import Button from "../common/Button";
+import { formatDate, formatTime } from "../../utils/formatDate";
 
 interface FlightCardProps {
     flight: Flight;
 }
 
-
-export default function FlightCard({
-                                       flight
-                                   }: FlightCardProps) {
-
+export default function FlightCard({flight}: FlightCardProps) {
 
     const [showModal, setShowModal] = useState(false);
+    //const isBookable = flight.status.toLowerCase() === "available";
+    const status = flight.status ?? "AVAILABLE";
+    const isBookable = status === "AVAILABLE";
+
+    const statusStyles = () => {
+
+        switch(status) {
+
+            case "AVAILABLE":
+            case "confirmed":
+                return "bg-green-100 text-green-700";
+            case "delayed":
+                return "bg-yellow-100 text-yellow-700";
+            case "cancelled":
+                return "bg-red-100 text-red-700";
+            default:
+                return "bg-gray-100 text-gray-700";
+        }
+    };
 
 
     return (
 
         <>
+            <div className="bg-white border border-gray-200 rounded-2xl shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden">
 
-            <Card>
-
-                <div className="space-y-3">
-
-                    <h3 className="text-xl font-bold">
-                        {flight.flightNumber}
-                    </h3>
-
-
-                    <p>
-                        Destination:
-                        {" "}
-                        {flight.destination}
-                    </p>
-
-
-                    <p>
-                        Departure:
-                        {" "}
-                        {flight.departureTime}
-                    </p>
-
-
-                    <p>
-                        Arrival:
-                        {" "}
-                        {flight.arrivalTime}
-                    </p>
-
-
-                    <p>
-                        Price:
-                        {" "}
-                        ${flight.price}
-                    </p>
-
-
-                    <p>
-                        Status:
-                        {" "}
-                        {flight.status}
-                    </p>
-
-
-                    <Button
-                        onClick={() => setShowModal(true)}
-                    >
-
-                        Book Flight
-
-                    </Button>
-
-
+                {/* Header */}
+                <div className="flex justify-between items-center px-6 py-4 border-b">
+                    <div>
+                        <p className="text-sm text-gray-500">Flight</p>
+                        <h3 className="text-xl font-bold">{flight.flightNumber} </h3>
+                    </div>
+                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${statusStyles()}`}>{status}</span>
                 </div>
 
+                {/* Route */}
+                <div className="px-6 py-5">
+                    <div className="flex items-center justify-between gap-4">
+                        <div>
+                            <p className="text-sm text-gray-500">Departure</p>
+                            <p className="font-semibold">{formatDate(flight.departureTime)}</p>
+                            <p className="text-gray-600">{formatTime(flight.departureTime)}</p>
+                        </div>
 
-            </Card>
+                        <div className="flex-1 border-t border-dashed border-gray-300 relative">
+                            <span className="absolute left-1/2 -top-4 -translate-x-1/2 bg-white px-2 text-xl">
+                                ✈
+                            </span>
+                        </div>
 
+                        <div className="text-right">
+                            <p className="text-sm text-gray-500">Arrival</p>
+                            <p className="font-semibold">{formatDate(flight.arrivalTime)}</p>
+                            <p className="text-gray-600">{formatTime(flight.arrivalTime)}</p>
+                        </div>
+                    </div>
 
+                    <div className="mt-5">
+                        <p className="text-sm text-gray-500">Destination</p>
+                        <p className="text-lg font-semibold">{flight.destination}</p>
+                    </div>
+                </div>
 
+                {/* Footer */}
+                <div className="flex items-center justify-between px-6 py-5 bg-gray-50 border-t">
+                    <div>
+                        <p className="text-sm text-gray-500">Ticket Price </p>
+                        <p className="text-2xl font-bold text-blue-600">${flight.price}</p>
+                    </div>
+
+                    {isBookable ? (
+                        <Button onClick={() => setShowModal(true)}>Book Flight</Button>
+                    ) : (
+                        <button disabled className="px-5 py-2 rounded-lg bg-gray-300 text-gray-600 cursor-not-allowed font-semibold">
+                            Unavailable
+                        </button>
+
+                    )}
+                </div>
+            </div>
             {
                 showModal && (
-
-                    <BookingModal
-
-                        flight={flight}
-
-                        onClose={() =>
-                            setShowModal(false)
-                        }
-
-                    />
-
+                    <BookingModal flight={flight} onClose={() => setShowModal(false) } />
                 )
             }
-
-
         </>
-
     );
-
 }

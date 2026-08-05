@@ -2,540 +2,85 @@ import { useState } from "react";
 
 import PageContainer from "../components/layout/PageContainer";
 import PageTitle from "../components/common/PageTitle";
+import BookingCard from "../components/bookings/BookingCard";
 
-import {
-    getBookings,
-    cancelBooking
-} from "../api/flightService";
-
-
-interface Booking {
-
-    id: number;
-
-    flightId: number;
-
-    flightNumber: string;
-
-    passengerName: string;
-
-    passengerEmail: string;
-
-    destination: string;
-
-    departureTime: string;
-
-    status: string;
-
-}
-
-
+import { getBookings } from "../api/flightService";
+import type { Booking } from "../types/Booking";
 
 const BookingLookupPage = () => {
 
-
     const [email, setEmail] = useState("");
-
     const [bookings, setBookings] = useState<Booking[]>([]);
-
     const [error, setError] = useState("");
-
-    const [message, setMessage] = useState("");
-
     const [loading, setLoading] = useState(false);
-
-    const [cancelLoading, setCancelLoading] = useState<number | null>(null);
-
-
 
     const searchBookings = async () => {
 
-
-        if(!email){
-
-            setError(
-                "Please enter your email"
-            );
-
+        if (!email) {
+            setError("Please enter your email");
             return;
-
         }
 
-
         try {
-
-
             setLoading(true);
-
             setError("");
-
-            setMessage("");
-
-
-
             const data = await getBookings(email);
-
-
             setBookings(data);
 
-
-
-        } catch(error){
-
-
+        } catch (error) {
             console.error(error);
+            setError("Unable to load bookings");
+            setBookings([]);
 
-
-            setError(
-                "Unable to load bookings"
-            );
-
-
-        }
-        finally{
-
-
+        } finally {
             setLoading(false);
-
-
         }
-
-
     };
-
-
-
-
-
-    const handleCancel = async (
-
-        flightId:number,
-
-        passengerEmail:string
-
-    ) => {
-
-
-
-        const confirmCancel = window.confirm(
-
-            "Are you sure you want to cancel this booking?"
-
-        );
-
-
-
-        if(!confirmCancel){
-
-            return;
-
-        }
-
-
-
-        try {
-
-
-            setCancelLoading(flightId);
-
-            setError("");
-
-            setMessage("");
-
-
-
-            await cancelBooking(
-
-                flightId,
-
-                passengerEmail
-
-            );
-
-
-
-            setMessage(
-
-                "Booking cancelled successfully"
-
-            );
-
-
-
-            // reload bookings after cancellation
-
-            await searchBookings();
-
-
-
-        }
-        catch(error){
-
-
-            console.error(error);
-
-
-            setError(
-
-                "Unable to cancel booking"
-
-            );
-
-
-        }
-        finally{
-
-
-            setCancelLoading(null);
-
-
-        }
-
-
-    };
-
-
-
-
 
     return (
-
         <PageContainer>
+            <PageTitle title="My Bookings" subtitle="Search and manage your flight bookings." />
+            <div className="rounded-xl bg-white p-8 shadow">
 
+                {/* Search Section */}
+                <div className="mb-8 flex flex-col gap-4 md:flex-row">
 
-            <PageTitle
-
-                title="My Bookings"
-
-                subtitle="Search and manage your flight bookings."
-
-            />
-
-
-
-            <div className="
-                bg-white
-                rounded-xl
-                shadow
-                p-8
-            ">
-
-
-                {/* Search Area */}
-
-                <div className="
-                    flex
-                    gap-4
-                    mb-6
-                ">
-
-
-                    <input
-
-                        type="email"
-
-                        placeholder="Enter your email"
-
-                        value={email}
-
-                        onChange={(e)=>
-                            setEmail(e.target.value)
-                        }
-
-                        className="
-                            border
-                            rounded-lg
-                            px-4
-                            py-2
-                            flex-1
-                        "
-
-                    />
-
-
-
-                    <button
-
-                        onClick={searchBookings}
-
-                        className="
-                            bg-blue-600
-                            text-white
-                            px-6
-                            py-2
-                            rounded-lg
-                            hover:bg-blue-700
-                        "
-
-                    >
-
+                    <input type="email" placeholder="Enter your email" value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="flex-1 rounded-lg border border-slate-300 px-4 py-3 outline-none transition focus:ring-2 focus:ring-blue-200 "/>
+                    <button onClick={searchBookings} className=" rounded-lg bg-blue-600 px-8 py-3 font-medium text-white transition hover:bg-blue-700">
                         Search
-
                     </button>
-
-
                 </div>
 
-
-
-
-
-                {
-                    loading && (
-
-                        <p className="text-slate-600">
-
-                            Loading bookings...
-
-                        </p>
-
-                    )
-                }
-
-
-
-
-
-
-                {
-                    error && (
-
-                        <p className="
-                            text-red-600
-                            mb-4
-                        ">
-
-                            {error}
-
-                        </p>
-
-                    )
-                }
-
-
-
-
-
-                {
-                    message && (
-
-                        <p className="
-                            text-green-600
-                            mb-4
-                        ">
-
-                            {message}
-
-                        </p>
-
-                    )
-                }
-
-
-
-
-
-                {
-                    !loading &&
-                    bookings.length === 0 && (
-
-                        <p className="text-slate-600">
-
-                            No bookings found.
-
-                        </p>
-
-                    )
-                }
-
-
-
-
-
-
-
-                <div className="space-y-5">
-
-
-
-                    {
-                        bookings.map((booking)=>(
-
-
-                            <div
-
-                                key={booking.id}
-
-                                className="
-                                    border
-                                    rounded-lg
-                                    p-5
-                                "
-
-                            >
-
-
-
-                                <h3 className="
-                                    text-xl
-                                    font-bold
-                                ">
-
-                                    Flight:
-                                    {" "}
-                                    {booking.flightNumber}
-
-                                </h3>
-
-
-
-
-
-                                <p>
-
-                                    Passenger:
-                                    {" "}
-                                    {booking.passengerName}
-
-                                </p>
-
-
-
-
-
-                                <p>
-
-                                    Email:
-                                    {" "}
-                                    {booking.passengerEmail}
-
-                                </p>
-
-
-
-
-
-                                <p>
-
-                                    Destination:
-                                    {" "}
-                                    {booking.destination}
-
-                                </p>
-
-
-
-
-
-                                <p>
-
-                                    Departure:
-                                    {" "}
-                                    {booking.departureTime}
-
-                                </p>
-
-
-
-
-
-                                <p>
-
-                                    Status:
-                                    {" "}
-                                    {booking.status}
-
-                                </p>
-
-
-
-
-
-
-                                <button
-
-
-                                    onClick={()=>
-
-                                        handleCancel(
-
-                                            booking.flightId,
-
-                                            booking.passengerEmail
-
-                                        )
-
-                                    }
-
-
-
-                                    disabled={
-
-                                        cancelLoading === booking.flightId
-
-                                    }
-
-
-
-                                    className="
-                                        mt-4
-                                        bg-red-600
-                                        text-white
-                                        px-5
-                                        py-2
-                                        rounded-lg
-                                        hover:bg-red-700
-                                        disabled:bg-gray-400
-                                    "
-
-
-                                >
-
-                                    {
-
-                                        cancelLoading === booking.flightId
-
-                                            ?
-
-                                            "Cancelling..."
-
-                                            :
-
-                                            "Cancel Booking"
-
-                                    }
-
-
-                                </button>
-
-
-
-
-
-                            </div>
-
-
-                        ))
-
-                    }
-
-
-
-                </div>
-
-
-
-
+                {/* Loading */}
+                {loading && (
+                    <div className="py-6 text-center text-slate-600">Loading bookings...</div>
+                )}
+
+                {/* Error */}
+                {error && (
+                    <div className="mb-6 rounded-lg bg-red-50 px-4 py-3 text-red-600 ">{error}</div>
+                )}
+
+                {/* Empty State */}
+                {!loading && bookings.length === 0 && !error && (
+                    <div className="rounded-xl bg-slate-50 p-8 text-center text-slate-500">
+                        No bookings found.
+                    </div>
+                )}
+
+                {/* Booking Cards */}
+                {!loading && bookings.length > 0 && (
+                    <div className="grid gap-6 md:grid-cols-2">
+                        {bookings.map((booking) => (
+                            <BookingCard key={booking.id} booking={booking} refresh={searchBookings}/>
+                        ))}
+                    </div>
+                )}
             </div>
-
-
-
         </PageContainer>
-
     );
-
 };
-
-
 
 export default BookingLookupPage;

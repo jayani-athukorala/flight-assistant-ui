@@ -1,163 +1,68 @@
 import { useState } from "react";
-
 import Button from "../common/Button";
 import Alert from "../common/Alert";
 
 import { cancelBooking } from "../../api/flightService";
 
-
 interface CancelBookingProps {
-
     flightId:number;
-
     email:string;
-
     onCancelled?:()=>void;
-
 }
 
-
-
-export default function CancelBooking({
-
-                                                flightId,
-
-                                                email,
-
-                                                onCancelled
-
-                                            }:CancelBookingProps){
-
-
+const CancelBooking = ({flightId, email, onCancelled}:CancelBookingProps) => {
     const [loading,setLoading] = useState(false);
-
     const [message,setMessage] = useState("");
-
     const [error,setError] = useState("");
 
-
-
     const handleCancel = async()=>{
-
-
-        const confirmCancel = window.confirm(
+        const confirmed = window.confirm(
             "Are you sure you want to cancel this booking?"
         );
 
-
-        if(!confirmCancel){
-
+        if(!confirmed){
             return;
-
         }
-
-
 
         try{
-
-
             setLoading(true);
-
+            setMessage("");
             setError("");
 
-
-
-            await cancelBooking(
-                flightId,
-                email
-            );
-
-
-
-            setMessage(
-                "Booking cancelled successfully"
-            );
-
-
+            await cancelBooking(flightId, email);
+            setMessage("Booking cancelled successfully");
 
             if(onCancelled){
-
                 onCancelled();
-
             }
-
-
-
         }
         catch(error){
-
-            setError(
-                "Unable to cancel booking"
-            );
-
+            console.error(error);
+            setError("Unable to cancel booking");
         }
         finally{
-
             setLoading(false);
-
         }
-
     };
 
-
-
     return (
-
-        <div className="mt-4">
-
-
+        <div className="mt-4 space-y-3">
             {
                 message &&
-
-                <Alert
-
-                    type="success"
-
-                    message={message}
-
-                />
-
+                <Alert type="success" message={message}/>
             }
-
-
-
             {
                 error &&
-
-                <Alert
-
-                    type="error"
-
-                    message={error}
-
-                />
-
+                <Alert type="error" message={error} />
             }
 
-
-
-            <Button
-
-                onClick={handleCancel}
-
-                disabled={loading}
-
-            >
-
+            <Button variant="danger" onClick={handleCancel} disabled={loading}>
                 {
-                    loading
-                        ?
-                        "Cancelling..."
-                        :
-                        "Cancel Booking"
+                    loading?"Cancelling...":"Cancel Booking"
                 }
-
-
             </Button>
-
-
         </div>
-
     );
+};
 
-}
+export default CancelBooking;

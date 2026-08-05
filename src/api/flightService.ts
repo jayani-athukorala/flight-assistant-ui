@@ -37,13 +37,32 @@ export const getBookings = async (
 };
 
 export const cancelBooking = async (
-    flightId: number,
-    email: string
+
+    flightId:number,
+
+    email:string
+
 ) => {
+
+
     const response = await api.delete(
-        `/flights/${flightId}/cancel?email=${email}`
+
+        `/flights/${flightId}/cancel`,
+
+        {
+
+            params: {
+
+                email
+
+            }
+
+        }
+
     );
 
+
     return response.data;
+
 };
 

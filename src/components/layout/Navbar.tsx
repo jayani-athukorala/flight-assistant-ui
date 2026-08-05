@@ -38,20 +38,12 @@ const Navbar = () => {
                     {/* Logo */}
 
                     <div className="flex items-center gap-2">
-
-                        <Plane
-                            className="text-blue-600"
-                            size={30}
-                        />
-
-                        <span className="font-bold text-xl">
-              Flight Reservation
-            </span>
+                        <Plane className="text-blue-600" size={30}/>
+                        <span className="font-bold text-xl">SkyRoute Airways</span>
 
                     </div>
 
                     {/* Navigation */}
-
                     <nav className="flex gap-2">
 
                         {navItems.map((item) => {
