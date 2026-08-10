@@ -12,7 +12,6 @@ import FlightGrid from "../components/flights/FlightGrid";
 import { getFlights } from "../api/flightService";
 import type { Flight } from "../types/Flight";
 
-
 const FlightsPage = () => {
 
     const [flights, setFlights] = useState<Flight[]>([]);
@@ -25,12 +24,13 @@ const FlightsPage = () => {
 
             try {
                 const data = await getFlights();
+
+                console.log("FLIGHTS RESPONSE:", data);
+                console.log("TOKEN:", localStorage.getItem("token"));
+
                 setFlights(data);
-
             } catch (error) {
-
-                console.error( "Failed to load flights",error);
-
+                console.error("Failed to load flights", error);
             } finally {
                 setLoading(false);
             }
@@ -77,14 +77,11 @@ const FlightsPage = () => {
                         <CardSkeletonGrid/>
                     )}
 
-                    {!loading &&
-                        filteredFlights.length === 0 && (
+                    {!loading && filteredFlights.length === 0 && (
                             <EmptyState title="No Flights Found" message="Try searching for another destination or flight number."/>
-
                         )}
 
-                    {!loading &&
-                        filteredFlights.length > 0 && (
+                    {!loading && filteredFlights.length > 0 && (
                             <FlightGrid flights={filteredFlights}/>
                         )}
                 </div>

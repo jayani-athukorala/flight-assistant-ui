@@ -7,40 +7,45 @@ import Home from "./pages/Home";
 import FlightsPage from "./pages/FlightsPage";
 import AvailableFlightsPage from "./pages/AvailableFlightsPage";
 import BookingLookupPage from "./pages/BookingLookupPage";
+import BookingPage from "./pages/BookingPage";
 import NotFound from "./pages/NotFound";
+
+import Login from "./components/auth/Login";
+import Register from "./components/auth/Register";
+import ProtectedRoute from "./components/auth/ProtectedRoute";
 
 function App() {
     return (
-        <div className="min-h-screen flex flex-col bg-slate-100">
-            <Navbar />
+        <div className="flex min-h-screen flex-col">
 
+            <Navbar />
             <main className="flex-1">
                 <Routes>
                     <Route path="/" element={<Home />} />
+                    <Route path="/flights" element={<FlightsPage />} />
+                    <Route path="/available" element={<AvailableFlightsPage />} />
+                    <Route path="/login" element={<Login />} />
+                    <Route path="/register" element={<Register />} />
 
-                    <Route
-                        path="/flights"
-                        element={<FlightsPage />}
-                    />
+                    <Route path="/bookings" element={
+                            <ProtectedRoute>
+                                <BookingLookupPage />
+                            </ProtectedRoute>
+                        } />
 
-                    <Route
-                        path="/available"
-                        element={<AvailableFlightsPage />}
-                    />
+                    <Route path="/booking/:id" element={
+                            <ProtectedRoute>
+                                <BookingPage />
+                            </ProtectedRoute>
+                        } />
 
-                    <Route
-                        path="/bookings"
-                        element={<BookingLookupPage />}
-                    />
+                    <Route path="*" element={<NotFound />} />
 
-                    <Route
-                        path="*"
-                        element={<NotFound />}
-                    />
                 </Routes>
             </main>
 
             <Footer />
+
         </div>
     );
 }

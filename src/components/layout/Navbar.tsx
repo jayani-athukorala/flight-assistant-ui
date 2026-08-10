@@ -1,9 +1,13 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import {
     Plane,
     BookOpen,
     Home,
+    LogIn,
+    LogOut,
 } from "lucide-react";
+
+import { useAuth } from "../context/useAuth";
 
 const navItems = [
     {
@@ -29,51 +33,74 @@ const navItems = [
 ];
 
 const Navbar = () => {
+    const { isAuthenticated, user, logout } = useAuth();
+    const navigate = useNavigate();
+
+    const handleLogout = () => {
+        logout();
+        navigate("/");
+    };
+
     return (
-        <header className="bg-white shadow-sm border-b sticky top-0 z-50">
-            <div className="max-w-7xl mx-auto">
+        <header className="border-b bg-white">
+            <div className="flex justify-between items-center h-16 px-6">
 
-                <div className="flex justify-between items-center h-16 px-6">
+                {/* Logo */}
+                <NavLink to="/" className="flex items-center gap-2" >
+                    <Plane className="text-blue-600" size={30}/>
 
-                    {/* Logo */}
+                    <span className="font-bold text-xl">
+                        SkyRoute Airways
+                    </span>
+                </NavLink>
 
-                    <div className="flex items-center gap-2">
-                        <Plane className="text-blue-600" size={30}/>
-                        <span className="font-bold text-xl">SkyRoute Airways</span>
+                {/* Navigation */}
+                <nav className="flex items-center gap-2">
 
-                    </div>
+                    {navItems.map((item) => {
+                        const Icon = item.icon;
 
-                    {/* Navigation */}
-                    <nav className="flex gap-2">
+                        return (
+                            <NavLink
+                                key={item.path}
+                                to={item.path}
+                                className={({ isActive }) =>
+                                    [
+                                        "flex items-center gap-2 px-4 py-2 rounded-lg transition",
+                                        isActive
+                                            ? "bg-blue-600 text-white"
+                                            : "hover:bg-slate-100 text-slate-700",
+                                    ].join(" ")
+                                }
+                            >
+                                <Icon size={18} />
+                                {item.name}
+                            </NavLink>
+                        );
+                    })}
 
-                        {navItems.map((item) => {
+                    {/* Login / Logout */}
+                    {!isAuthenticated ? (
+                        <NavLink to="/login" className="flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 ml-2" >
+                            <LogIn size={18} />
+                            Login
+                        </NavLink>
+                    ) : (
+                        <div className="flex items-center gap-3 ml-2">
 
-                            const Icon = item.icon;
+                            <span className="text-sm text-slate-600">
+                                {user?.email}
+                            </span>
 
-                            return (
-                                <NavLink
-                                    key={item.path}
-                                    to={item.path}
-                                    className={({ isActive }) =>
-                                        `flex items-center gap-2 px-4 py-2 rounded-lg transition
+                            <button type="button" onClick={handleLogout} className="flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-800 text-white hover:bg-slate-900">
+                                <LogOut size={18} />
+                                Logout
+                            </button>
 
-                    ${
-                                            isActive
-                                                ? "bg-blue-600 text-white"
-                                                : "hover:bg-slate-100 text-slate-700"
-                                        }`
-                                    }
-                                >
-                                    <Icon size={18} />
+                        </div>
+                    )}
 
-                                    {item.name}
-                                </NavLink>
-                            );
-                        })}
-                    </nav>
-
-                </div>
-
+                </nav>
             </div>
         </header>
     );
