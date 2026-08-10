@@ -251,11 +251,13 @@ const BookingCard = ({ booking, refresh }: BookingCardProps) => {
 
                 <div className="flex justify-end border-t border-slate-200 pt-4">
 
-                    <CancelBookingButton
-                        bookingId={booking.id}
-                        email={passenger.email}
-                        onCancelled={refresh}
-                    />
+                    {booking.status !== "CANCELLED" && (
+                        <CancelBookingButton
+                            bookingId={booking.id}
+                            email={passenger.email}
+                            onCancelled={refresh}
+                        />
+                    )}
 
                 </div>
 

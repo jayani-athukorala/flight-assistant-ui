@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 import PageContainer from "../components/layout/PageContainer";
 import PageTitle from "../components/common/PageTitle";
@@ -8,6 +9,7 @@ import { getBookings } from "../api/flightService";
 import type { Booking } from "../types/Booking";
 
 const BookingLookupPage = () => {
+    const navigate = useNavigate();
     const [bookings, setBookings] = useState<Booking[]>([]);
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(true);
@@ -59,10 +61,21 @@ const BookingLookupPage = () => {
 
     return (
         <PageContainer>
-            <PageTitle
-                title="My Bookings"
-                subtitle="View and manage your flight bookings."
-            />
+
+            <div className="flex items-center justify-between gap-4">
+                <PageTitle
+                    title="My Bookings"
+                    subtitle="View and manage your flight bookings."
+                />
+
+                <button
+                    type="button"
+                    onClick={() => navigate("/available")}
+                    className="shrink-0 rounded-lg bg-blue-600 px-5 py-2.5 font-medium text-white transition hover:bg-blue-700"
+                >
+                    Create Booking
+                </button>
+            </div>
 
             <div className="rounded-xl bg-white p-8 shadow">
 
@@ -103,6 +116,7 @@ const BookingLookupPage = () => {
                 )}
 
             </div>
+
         </PageContainer>
     );
 };
