@@ -37,7 +37,10 @@ const AvailableFlightsPage = () => {
                 const data = await getAvailableFlights();
                 setFlights(data);
             } catch (error) {
-                console.error("Failed to load available flights", error);
+                console.error(
+                    "Failed to load available flights",
+                    error
+                );
             } finally {
                 setLoading(false);
             }
@@ -87,7 +90,10 @@ const AvailableFlightsPage = () => {
      * Move the weekly strip by one week.
      */
     function changeWeek(amount: number) {
-        const newWeekStart = addDays(weekStart, amount * 7);
+        const newWeekStart = addDays(
+            weekStart,
+            amount * 7
+        );
 
         setWeekStart(newWeekStart);
     }
@@ -104,9 +110,7 @@ const AvailableFlightsPage = () => {
         }
 
         setSelectedDate(date);
-
         setWeekStart(getStartOfWeek(date));
-
         setCalendarOpen(false);
     }
 
@@ -120,23 +124,54 @@ const AvailableFlightsPage = () => {
     }, [weekStart]);
 
     /**
-     * Dates that have available flights.
+     * Only flights that are genuinely available for booking.
+     *
+     * A flight is available when:
+     * 1. Its status is AVAILABLE
+     * 2. Its departure time has not passed
+     */
+    const trulyAvailableFlights = useMemo(() => {
+        const now = Date.now();
+
+        return flights.filter((flight) => {
+            const status = (
+                flight.status ?? "AVAILABLE"
+            ).toUpperCase();
+
+            const departureTime = new Date(
+                flight.departureTime
+            ).getTime();
+
+            return (
+                status === "AVAILABLE" &&
+                departureTime > now
+            );
+        });
+    }, [flights]);
+
+    /**
+     * Dates that have genuinely available flights.
      */
     const availableDates = useMemo(() => {
         return new Set(
-            flights.map((flight) => flight.departureTime.slice(0, 10))
+            trulyAvailableFlights.map(
+                (flight) =>
+                    flight.departureTime.slice(0, 10)
+            )
         );
-    }, [flights]);
+    }, [trulyAvailableFlights]);
 
     /**
      * Filter flights based on selected date + search.
      */
     const filteredFlights = useMemo(() => {
         const term = search.trim().toLowerCase();
-        const selectedDateString = formatDate(selectedDate);
+        const selectedDateString =
+            formatDate(selectedDate);
 
-        return flights.filter((flight) => {
-            const flightDate = flight.departureTime.slice(0, 10);
+        return trulyAvailableFlights.filter((flight) => {
+            const flightDate =
+                flight.departureTime.slice(0, 10);
 
             const matchesDate =
                 flightDate === selectedDateString;
@@ -151,7 +186,11 @@ const AvailableFlightsPage = () => {
 
             return matchesDate && matchesSearch;
         });
-    }, [flights, search, selectedDate]);
+    }, [
+        trulyAvailableFlights,
+        search,
+        selectedDate,
+    ]);
 
     /**
      * Average price for the selected date.
@@ -159,16 +198,19 @@ const AvailableFlightsPage = () => {
     const averagePrice =
         filteredFlights.length > 0
             ? Math.round(
-                  filteredFlights.reduce(
-                      (sum, flight) =>
-                          sum + Number(flight.startingPrice),
-                      0
-                  ) / filteredFlights.length
-              )
+                filteredFlights.reduce(
+                    (sum, flight) =>
+                        sum +
+                        Number(
+                            flight.startingPrice
+                        ),
+                    0
+                ) / filteredFlights.length
+            )
             : 0;
 
     /**
-     * Check whether a date has flights.
+     * Check whether a date has available flights.
      */
     function hasFlights(date: Date): boolean {
         return availableDates.has(formatDate(date));
@@ -178,7 +220,10 @@ const AvailableFlightsPage = () => {
      * Check whether date is selected.
      */
     function isSelected(date: Date): boolean {
-        return formatDate(date) === formatDate(selectedDate);
+        return (
+            formatDate(date) ===
+            formatDate(selectedDate)
+        );
     }
 
     /**
@@ -217,7 +262,9 @@ const AvailableFlightsPage = () => {
                         {/* Previous week */}
                         <button
                             type="button"
-                            onClick={() => changeWeek(-1)}
+                            onClick={() =>
+                                changeWeek(-1)
+                            }
                             className="flex-shrink-0 w-10 h-10 rounded-full border flex items-center justify-center text-gray-600 hover:bg-gray-100 transition"
                             aria-label="Previous week"
                         >
@@ -227,54 +274,60 @@ const AvailableFlightsPage = () => {
                         {/* Days */}
                         <div className="grid grid-cols-7 flex-1 gap-2">
                             {weekDays.map((date) => {
-                                const selected = isSelected(date);
+                                const selected =
+                                    isSelected(date);
+
                                 const hasAvailableFlights =
                                     hasFlights(date);
 
                                 return (
                                     <button
-                                        key={formatDate(date)}
+                                        key={formatDate(
+                                            date
+                                        )}
                                         type="button"
                                         onClick={() =>
-                                            handleDateSelect(date)
+                                            handleDateSelect(
+                                                date
+                                            )
                                         }
                                         className={`
-relative
-py-3
-rounded-xl
-text-center
-transition
-${
-    selected
-        ? "bg-blue-600 text-white shadow-sm"
-        : "hover:bg-gray-100 text-gray-700"
-}
-`}
+                                            relative
+                                            py-3
+                                            rounded-xl
+                                            text-center
+                                            transition
+                                            ${
+                                            selected
+                                                ? "bg-blue-600 text-white shadow-sm"
+                                                : "hover:bg-gray-100 text-gray-700"
+                                        }
+                                        `}
                                     >
-                                        <div className="text-xs font-medium">
-                                            {getDayName(date)}
-                                        </div>
+                                        {getDayName(date)}
 
                                         <div className="text-sm font-semibold mt-1">
-                                            {getDateLabel(date)}
+                                            {getDateLabel(
+                                                date
+                                            )}
                                         </div>
 
                                         {hasAvailableFlights && (
                                             <span
                                                 className={`
-absolute
-bottom-1
-left-1/2
--translate-x-1/2
-w-1.5
-h-1.5
-rounded-full
-${
-    selected
-        ? "bg-white"
-        : "bg-blue-600"
-}
-`}
+                                                    absolute
+                                                    bottom-1
+                                                    left-1/2
+                                                    -translate-x-1/2
+                                                    w-1.5
+                                                    h-1.5
+                                                    rounded-full
+                                                    ${
+                                                    selected
+                                                        ? "bg-white"
+                                                        : "bg-blue-600"
+                                                }
+                                                `}
                                             />
                                         )}
                                     </button>
@@ -285,7 +338,9 @@ ${
                         {/* Next week */}
                         <button
                             type="button"
-                            onClick={() => changeWeek(1)}
+                            onClick={() =>
+                                changeWeek(1)
+                            }
                             className="flex-shrink-0 w-10 h-10 rounded-full border flex items-center justify-center text-gray-600 hover:bg-gray-100 transition"
                             aria-label="Next week"
                         >
@@ -297,7 +352,9 @@ ${
                     <div className="flex justify-center mt-4">
                         <button
                             type="button"
-                            onClick={() => setCalendarOpen(true)}
+                            onClick={() =>
+                                setCalendarOpen(true)
+                            }
                             className="text-sm font-medium text-blue-600 hover:text-blue-700"
                         >
                             Choose another date
@@ -342,8 +399,8 @@ ${
                             <EmptyState
                                 title="No Available Flights"
                                 message={`There are no available flights on ${getDateLabel(
-    selectedDate
-)}.`}
+                                    selectedDate
+                                )}.`}
                             />
                         )}
 
@@ -360,7 +417,9 @@ ${
             {calendarOpen && (
                 <div
                     className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
-                    onClick={() => setCalendarOpen(false)}
+                    onClick={() =>
+                        setCalendarOpen(false)
+                    }
                 >
                     <div
                         className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-md"
@@ -388,8 +447,12 @@ ${
                         <div className="flex justify-center">
                             <DayPicker
                                 mode="single"
-                                selected={selectedDate}
-                                onSelect={handleDateSelect}
+                                selected={
+                                    selectedDate
+                                }
+                                onSelect={
+                                    handleDateSelect
+                                }
                                 showOutsideDays
                                 navLayout="around"
                             />
