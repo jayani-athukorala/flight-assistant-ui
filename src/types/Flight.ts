@@ -1,12 +1,27 @@
-export interface Flight {
+import type {Airport} from "./Airport";
 
-    id:number;
-    flightNumber:string;
-    departureTime:string;
-    arrivalTime:string;
-    status:string;
-    airline:string;
-    origin:string;
-    destination:string;
+export type SeatClass =
+    | "ECONOMY"
+    | "PREMIUM_ECONOMY"
+    | "BUSINESS"
+    | "FIRST_CLASS";
+
+
+export interface Flight {
+    id: number;
+    flightNumber: string;
+    departureTime: string;
+    arrivalTime: string;
+    status: string;
+    airline: string;
+    origin: Airport;
+    destination: Airport;
     startingPrice: number | null;
+}
+
+export interface FlightSeat {
+    id: number;
+    seatNumber: string;
+    seatClass: SeatClass;
+    price: number;
 }

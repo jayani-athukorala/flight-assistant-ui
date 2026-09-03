@@ -3,15 +3,35 @@ import FlightCard from "./FlightCard";
 
 interface FlightGridProps {
     flights: Flight[];
+    onSelectFlight: (flight: Flight) => void;
 }
 
-export default function FlightGrid({flights}: FlightGridProps) {
-
+const FlightGrid = ({
+                        flights,
+                        onSelectFlight,
+                    }: FlightGridProps) => {
     return (
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
-            {flights.map((flight)=>(
-                <FlightCard key={flight.id} flight={flight}/>
+        <div
+            className="
+                grid
+                grid-cols-1
+                items-stretch
+                gap-6
+                md:grid-cols-2
+                xl:grid-cols-3
+            "
+        >
+            {flights.map((flight) => (
+                <FlightCard
+                    key={flight.id}
+                    flight={flight}
+                    onSelect={() =>
+                        onSelectFlight(flight)
+                    }
+                />
             ))}
         </div>
     );
-}
+};
+
+export default FlightGrid;

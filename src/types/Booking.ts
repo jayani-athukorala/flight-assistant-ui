@@ -1,56 +1,57 @@
-export interface FlightInfo {
-    id: number;
-    flightNumber: string;
-    airline: string;
-    origin: string;
-    destination: string;
-    departureTime: string;
-    arrivalTime: string;
-    status: string;
-}
+import type { Flight } from "./Flight";
 
-export interface Passenger {
-    firstName: string;
-    lastName: string;
-    passportNumber: string;
-    email: string;
-}
+export type TripType = "ONE_WAY" | "ROUND_TRIP";
 
-export interface FlightSeat {
-    id: number;
-    seatNumber: string;
-    seatClass: string;
-    price: number;
-}
-
-export interface Booking {
-    id: number;
-    bookingReference: string;
-    status: string;
-    tripType: string;
-    totalPrice: number;
-
-    outboundFlight: FlightInfo;
-    returnFlight?: FlightInfo | null;
-
-    passengers: Passenger[];
-    seats: FlightSeat[];
-}
+export type BookingStatus =
+    | "PENDING"
+    | "CONFIRMED"
+    | "CANCELLED"
+    | "COMPLETED";
 
 export interface PassengerRequest {
     firstName: string;
     lastName: string;
     passportNumber: string;
     email: string;
+    outboundSeatId: number;
+    returnSeatId: number | null;
 }
 
-
+/** Matches the revised BookingRequestDto. */
 export interface BookingRequest {
-
     outboundFlightId: number;
     returnFlightId: number | null;
-    tripType: "ONE_WAY" | "ROUND_TRIP";
-    seatClass: "ECONOMY" | "BUSINESS";
     passengers: PassengerRequest[];
-
 }
+
+export interface PassengerResponse {
+    id: number;
+    firstName: string;
+    lastName: string;
+    passportNumber: string;
+    email: string;
+}
+
+export interface BookingSeat {
+    id: number;
+    passengerId: number;
+    flightId: number;
+    seatNumber: string;
+}
+
+export interface BookingResponse {
+    id: number;
+    bookingReference: string;
+    bookingDate: string;
+    cancelledAt: string | null;
+    archivedAt: string | null;
+    status: BookingStatus;
+    tripType: TripType;
+    outboundFlight: Flight;
+    returnFlight: Flight | null;
+    totalPrice: number;
+    passengers: PassengerResponse[];
+    seats: BookingSeat[];
+}
+
+export type Booking = BookingResponse;

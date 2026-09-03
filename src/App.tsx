@@ -10,38 +10,72 @@ import BookingLookupPage from "./pages/BookingLookupPage";
 import BookingPage from "./pages/BookingPage";
 import NotFound from "./pages/NotFound";
 
-import Login from "./components/auth/Login";
-import Register from "./components/auth/Register";
-import ProtectedRoute from "./components/auth/ProtectedRoute";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import ProtectedRoute from "./routes/ProtectedRoute";
 
 function App() {
     return (
         <div className="flex min-h-screen flex-col">
 
             <Navbar />
-            <main className="flex-1">
-                <Routes>
-                    <Route path="/" element={<Home />} />
-                    <Route path="/flights" element={<FlightsPage />} />
-                    <Route path="/available" element={<AvailableFlightsPage />} />
-                    <Route path="/login" element={<Login />} />
-                    <Route path="/register" element={<Register />} />
 
-                    <Route path="/bookings" element={
+            <main className="flex-1">
+
+                <Routes>
+
+                    <Route
+                        path="/"
+                        element={<Home />}
+                    />
+
+                    <Route
+                        path="/flights"
+                        element={<FlightsPage />}
+                    />
+
+                    <Route
+                        path="/available"
+                        element={
+                            <AvailableFlightsPage />
+                        }
+                    />
+
+                    <Route
+                        path="/login"
+                        element={<Login />}
+                    />
+
+                    <Route
+                        path="/register"
+                        element={<Register />}
+                    />
+
+                    <Route
+                        path="/bookings"
+                        element={
                             <ProtectedRoute>
                                 <BookingLookupPage />
                             </ProtectedRoute>
-                        } />
+                        }
+                    />
 
-                    <Route path="/booking/:id" element={
+                    <Route
+                        path="/booking/:id"
+                        element={
                             <ProtectedRoute>
                                 <BookingPage />
                             </ProtectedRoute>
-                        } />
+                        }
+                    />
 
-                    <Route path="*" element={<NotFound />} />
+                    <Route
+                        path="*"
+                        element={<NotFound />}
+                    />
 
                 </Routes>
+
             </main>
 
             <Footer />
