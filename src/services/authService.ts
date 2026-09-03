@@ -1,40 +1,31 @@
 import axios from "axios";
+import type {
+    AuthResponse,
+    LoginRequest,
+    RegisterRequest,
+} from "../types/Auth";
 
-const API_URL = "http://localhost:8080/api/auth";
-
-export interface LoginRequest {
-    email: string;
-    password: string;
-}
-
-export interface RegisterRequest {
-    email: string;
-    password: string;
-}
-
-export interface LoginResponse {
-    token: string;
-    email: string;
-    role: string;
-}
+const API_URL =
+    import.meta.env.VITE_API_BASE_URL ??
+    "http://localhost:8080/api";
 
 const login = async (
     credentials: LoginRequest
-): Promise<LoginResponse> => {
-    const response = await axios.post<LoginResponse>(
-        `${API_URL}/login`,
+): Promise<AuthResponse> => {
+    const { data } = await axios.post<AuthResponse>(
+        `${API_URL}/auth/login`,
         credentials
     );
 
-    return response.data;
+    return data;
 };
 
 const register = async (
-    data: RegisterRequest
+    request: RegisterRequest
 ): Promise<void> => {
     await axios.post(
-        `${API_URL}/register`,
-        data
+        `${API_URL}/auth/register`,
+        request
     );
 };
 
