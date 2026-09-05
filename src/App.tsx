@@ -13,6 +13,7 @@ import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import ProtectedRoute from "./routes/ProtectedRoute";
+import AssistantWidget from "./components/assistant/AssistantWidget";
 
 function App() {
     return (
@@ -79,6 +80,8 @@ function App() {
             </main>
 
             <Footer />
+
+            <AssistantWidget />
 
         </div>
     );
