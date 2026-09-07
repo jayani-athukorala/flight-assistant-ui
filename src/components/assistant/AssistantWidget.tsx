@@ -74,9 +74,40 @@ export default function AssistantWidget() {
     };
 
     useEffect(() => {
-        const logout = () => { sessionStorage.removeItem(STORAGE_KEY); setSession(emptySession); };
-        window.addEventListener("auth:logout", logout);
-        return () => window.removeEventListener("auth:logout", logout);
+        const resetAssistantSession = () => {
+            /*
+            * Do not call the backend clear endpoint here.
+            * The old conversation belongs to the previous identity.
+            * It will expire automatically through the backend TTL.
+            */
+            sessionStorage.removeItem(STORAGE_KEY);
+            setSession({
+                conversationId: null,
+                messages: [],
+            });
+        };
+
+        window.addEventListener(
+            "auth:identity-changed",
+            resetAssistantSession
+        );
+
+        window.addEventListener(
+            "auth:logout",
+            resetAssistantSession
+        );
+
+        return () => {
+            window.removeEventListener(
+                "auth:identity-changed",
+                resetAssistantSession
+            );
+
+            window.removeEventListener(
+                "auth:logout",
+                resetAssistantSession
+            );
+        };
     }, []);
 
     return <><AssistantButton open={open} onClick={() => setOpen((value) => !value)}/>{open && <AssistantPanel messages={session.messages} loading={loading} onClose={() => setOpen(false)} onClear={clear} onSend={send} onConfirm={confirm} onReject={reject}/>}</>;

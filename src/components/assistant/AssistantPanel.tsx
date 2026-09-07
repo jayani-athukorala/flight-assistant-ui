@@ -34,7 +34,15 @@ export default function AssistantPanel(props: Props) {
                 {props.messages.length === 0 && (
                     <div className="mx-auto mt-10 max-w-xs text-center"><span className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-100 text-blue-700"><Bot size={23}/></span><h3 className="mt-4 font-bold text-slate-900">Where would you like to go?</h3><p className="mt-2 text-sm leading-6 text-slate-500">Search flights and seats. Sign in to view, create, or cancel your bookings.</p><div className="mt-4 flex flex-wrap justify-center gap-2">{["Find flights to Paris", "Show airports in Gothenburg", "Show my bookings"].map((prompt) => <button key={prompt} type="button" onClick={() => props.onSend(prompt)} className="rounded-full border border-blue-200 bg-white px-3 py-1.5 text-xs font-medium text-blue-700 hover:bg-blue-50">{prompt}</button>)}</div></div>
                 )}
-                {props.messages.map((message) => <AssistantMessage key={message.id} item={message} busy={props.loading} onConfirm={props.onConfirm} onReject={props.onReject} onRetry={props.onSend}/>)}
+                {props.messages.map((message) => <AssistantMessage
+                    key={message.id}
+                    item={message}
+                    busy={props.loading}
+                    onSend={props.onSend}
+                    onConfirm={props.onConfirm}
+                    onReject={props.onReject}
+                    onRetry={props.onSend}
+                />)}
                 {props.loading && <div className="flex items-center gap-2 text-xs text-slate-500"><LoaderCircle className="animate-spin text-blue-600" size={17}/><span>Assistant is thinking…</span></div>}
                 <div ref={bottom}/>
             </div>

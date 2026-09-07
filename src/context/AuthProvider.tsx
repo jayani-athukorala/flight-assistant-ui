@@ -34,8 +34,13 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     const logout = useCallback(() => {
         localStorage.removeItem(AUTH_TOKEN_KEY);
         localStorage.removeItem(AUTH_USER_KEY);
+
         setToken(null);
         setUser(null);
+
+        window.dispatchEvent(
+            new Event("auth:identity-changed")
+        );
     }, []);
 
     const login = useCallback((response: AuthResponse) => {
@@ -44,13 +49,25 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
             role: response.role,
         };
 
-        localStorage.setItem(AUTH_TOKEN_KEY, response.token);
+        localStorage.setItem(
+            AUTH_TOKEN_KEY,
+            response.token
+        );
+
         localStorage.setItem(
             AUTH_USER_KEY,
             JSON.stringify(authenticatedUser)
         );
+
         setToken(response.token);
         setUser(authenticatedUser);
+
+        /*
+        * Anonymous conversations must not be reused after login.
+        */
+        window.dispatchEvent(
+            new Event("auth:identity-changed")
+        );
     }, []);
 
     useEffect(() => {
