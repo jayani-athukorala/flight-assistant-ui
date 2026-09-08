@@ -10,6 +10,7 @@ export interface FlightAdminSearchParams {
     date?: string;
     status?: string;
     query?: string;
+    createdByEmail?: string;
 }
 
 export const getFlights = async (

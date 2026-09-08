@@ -23,8 +23,10 @@ export default function AdminBookingsPage() {
     const [bookings, setBookings] = useState<Booking[]>([]);
     const [date, setDate] = useState(today);
     const [status, setStatus] = useState<StatusFilter>("CONFIRMED");
-    const [email, setEmail] = useState("");
-    const [debouncedEmail, setDebouncedEmail] = useState("");
+    const [createdByEmail, setCreatedByEmail] = useState("");
+    const [debouncedCreatedByEmail, setDebouncedCreatedByEmail] = useState("");
+    const [bookingReference, setBookingReference] = useState("");
+    const [debouncedBookingReference, setDebouncedBookingReference] = useState("");
     const [page, setPage] = useState(0);
     const [totalPages, setTotalPages] = useState(0);
     const [totalElements, setTotalElements] = useState(0);
@@ -33,11 +35,19 @@ export default function AdminBookingsPage() {
 
     useEffect(() => {
         const timeout = window.setTimeout(() => {
-            setDebouncedEmail(email.trim());
+            setDebouncedCreatedByEmail(createdByEmail.trim());
             setPage(0);
         }, 300);
         return () => window.clearTimeout(timeout);
-    }, [email]);
+    }, [createdByEmail]);
+
+    useEffect(() => {
+        const timeout = window.setTimeout(() => {
+            setDebouncedBookingReference(bookingReference.trim());
+            setPage(0);
+        }, 300);
+        return () => window.clearTimeout(timeout);
+    }, [bookingReference]);
 
     const loadBookings = useCallback(async () => {
         setLoading(true);
@@ -45,7 +55,8 @@ export default function AdminBookingsPage() {
         try {
             const result = await getAdminBookings({
                 status: status === "ALL" ? undefined : status,
-                email: debouncedEmail || undefined,
+                createdByEmail: debouncedCreatedByEmail || undefined,
+                bookingReference: debouncedBookingReference || undefined,
                 from: date || undefined,
                 to: date || undefined,
                 page,
@@ -60,14 +71,15 @@ export default function AdminBookingsPage() {
         } finally {
             setLoading(false);
         }
-    }, [date, debouncedEmail, page, status]);
+    }, [date, debouncedBookingReference, debouncedCreatedByEmail, page, status]);
 
     useEffect(() => void loadBookings(), [loadBookings]);
 
     const reset = () => {
         setDate(today);
         setStatus("CONFIRMED");
-        setEmail("");
+        setCreatedByEmail("");
+        setBookingReference("");
         setPage(0);
     };
 
@@ -86,7 +98,7 @@ export default function AdminBookingsPage() {
                 </header>
 
                 <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                    <div className="grid gap-4 lg:grid-cols-[1fr_1fr_2fr_auto] lg:items-end">
+                    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-[1fr_1fr_1.5fr_1.5fr_auto] xl:items-end">
                         <label className="text-sm font-semibold text-slate-700">Booking date
                             <input type="date" value={date} onChange={(event) => { setDate(event.target.value); setPage(0); }} className="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3" />
                         </label>
@@ -99,7 +111,10 @@ export default function AdminBookingsPage() {
                             </select>
                         </label>
                         <label className="text-sm font-semibold text-slate-700">Created by email
-                            <span className="relative mt-2 block"><Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={17} /><input value={email} onChange={(event) => setEmail(event.target.value)} placeholder="customer@example.com" className="w-full rounded-xl border border-slate-300 py-3 pl-10 pr-4" /></span>
+                            <span className="relative mt-2 block"><Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={17} /><input value={createdByEmail} onChange={(event) => setCreatedByEmail(event.target.value)} placeholder="customer@example.com" className="w-full rounded-xl border border-slate-300 py-3 pl-10 pr-4" /></span>
+                        </label>
+                        <label className="text-sm font-semibold text-slate-700">Booking reference
+                            <span className="relative mt-2 block"><Ticket className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={17} /><input value={bookingReference} onChange={(event) => setBookingReference(event.target.value)} placeholder="FB-39AF9883" className="w-full rounded-xl border border-slate-300 py-3 pl-10 pr-4" /></span>
                         </label>
                         <button type="button" onClick={reset} className="rounded-xl border border-slate-300 px-5 py-3 font-semibold text-slate-700 hover:bg-slate-50">Reset</button>
                     </div>
@@ -135,7 +150,7 @@ export default function AdminBookingsPage() {
 const AdminBookingCard = ({ booking }: { booking: Booking }) => (
     <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
         <header className="flex items-start justify-between gap-3">
-            <div><p className="text-xs font-bold uppercase text-blue-600">{booking.bookingReference}</p><h2 className="mt-1 font-bold text-slate-950">{booking.createdByEmail}</h2></div>
+            <div><p className="text-xs font-bold uppercase text-blue-600">{booking.bookingReference}</p><h2 className="mt-1 font-bold text-slate-950">{booking.createdByEmail ?? "Audit user unavailable"}</h2></div>
             <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-700">{booking.status}</span>
         </header>
         <div className="mt-4 grid grid-cols-2 gap-3 text-sm">

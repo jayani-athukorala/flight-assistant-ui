@@ -10,6 +10,7 @@ export type SeatClass =
 export interface Flight {
     id: number;
     flightNumber: string;
+    createdByEmail: string | null;
     departureTime: string;
     arrivalTime: string;
     status: string;

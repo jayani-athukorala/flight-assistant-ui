@@ -60,6 +60,8 @@ const FlightsPage = () => {
     const [status, setStatus] = useState<StatusFilter>("SCHEDULED");
     const [search, setSearch] = useState("");
     const [debouncedSearch, setDebouncedSearch] = useState("");
+    const [createdByEmail, setCreatedByEmail] = useState("");
+    const [debouncedCreatedByEmail, setDebouncedCreatedByEmail] = useState("");
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [createOpen, setCreateOpen] = useState(false);
@@ -72,6 +74,14 @@ const FlightsPage = () => {
         return () => window.clearTimeout(timeout);
     }, [search]);
 
+    useEffect(() => {
+        const timeout = window.setTimeout(
+            () => setDebouncedCreatedByEmail(createdByEmail.trim()),
+            300
+        );
+        return () => window.clearTimeout(timeout);
+    }, [createdByEmail]);
+
     const loadFlights = useCallback(async () => {
         if (!isAdmin) return;
 
@@ -83,6 +93,7 @@ const FlightsPage = () => {
                 date: date || undefined,
                 status: status === "ALL" ? undefined : status,
                 query: debouncedSearch || undefined,
+                createdByEmail: debouncedCreatedByEmail || undefined,
             });
             setFlights(data);
         } catch {
@@ -91,7 +102,7 @@ const FlightsPage = () => {
         } finally {
             setLoading(false);
         }
-    }, [date, debouncedSearch, isAdmin, status]);
+    }, [date, debouncedCreatedByEmail, debouncedSearch, isAdmin, status]);
 
     useEffect(() => {
         void loadFlights();
@@ -132,6 +143,7 @@ const FlightsPage = () => {
         setDate(localDate(new Date()));
         setStatus("SCHEDULED");
         setSearch("");
+        setCreatedByEmail("");
     };
 
     if (!isAdmin) {
@@ -180,7 +192,7 @@ const FlightsPage = () => {
                         <h2 className="font-bold text-slate-900">Filters</h2>
                     </div>
 
-                    <div className="grid gap-4 lg:grid-cols-[1fr_1fr_2fr_auto] lg:items-end">
+                    <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-[1fr_1fr_2fr_2fr_auto] xl:items-end">
                         <div>
                             <label htmlFor="operation-date" className="mb-2 block text-sm font-semibold text-slate-700">
                                 Flight date
@@ -192,6 +204,23 @@ const FlightsPage = () => {
                                 onChange={(event) => setDate(event.target.value)}
                                 className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
                             />
+                        </div>
+
+                        <div>
+                            <label htmlFor="operation-created-by" className="mb-2 block text-sm font-semibold text-slate-700">
+                                Created by email
+                            </label>
+                            <div className="relative">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                                <input
+                                    id="operation-created-by"
+                                    type="email"
+                                    value={createdByEmail}
+                                    onChange={(event) => setCreatedByEmail(event.target.value)}
+                                    placeholder="admin@example.com"
+                                    className="w-full rounded-xl border border-slate-300 py-3 pl-10 pr-4 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+                                />
+                            </div>
                         </div>
 
                         <div>

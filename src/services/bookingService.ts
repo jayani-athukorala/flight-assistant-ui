@@ -15,7 +15,8 @@ export interface PageResponse<T> {
 
 export interface AdminBookingSearchParams {
     status?: BookingStatus;
-    email?: string;
+    createdByEmail?: string;
+    bookingReference?: string;
     from?: string;
     to?: string;
     page?: number;
