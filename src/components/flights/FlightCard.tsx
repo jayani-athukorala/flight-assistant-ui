@@ -25,6 +25,7 @@ import { getBookingDraft } from "../../utils/bookingDraft";
 interface FlightCardProps {
     flight: Flight;
     onSelect?: () => void;
+    actionLabel?: string;
 }
 
 interface LocationState {
@@ -60,6 +61,7 @@ const calculateDuration = (
 const FlightCard = ({
                         flight,
                         onSelect,
+                        actionLabel,
                     }: FlightCardProps) => {
     const navigate = useNavigate();
     const location = useLocation();
@@ -285,9 +287,9 @@ const FlightCard = ({
 
                 {isBookable ? (
                     <Button onClick={handleBookFlight}>
-                        {isReturnSelection
+                        {actionLabel ?? (isReturnSelection
                             ? "Select return"
-                            : "Book flight"}
+                            : "Book flight")}
                     </Button>
                 ) : (
                     <button

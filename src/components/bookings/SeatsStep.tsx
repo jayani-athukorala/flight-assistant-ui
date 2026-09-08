@@ -49,6 +49,7 @@ interface SeatsStepProps {
     ) => void;
 
     onContinue: () => void;
+    continueLabel?: string;
 }
 
 interface SeatLoadResult {
@@ -74,6 +75,7 @@ const SeatsStep = ({
                        direction = "OUTBOUND",
                        onPassengerSeatChange,
                        onContinue,
+                       continueLabel,
                    }: SeatsStepProps) => {
     const [activePassenger, setActivePassenger] =
         useState(0);
@@ -508,12 +510,12 @@ const SeatsStep = ({
                     {activePassenger <
                     passengers.length - 1
                         ? "Next Passenger"
-                        : isReturnDirection
+                        : continueLabel ?? (isReturnDirection
                             ? "Review Booking"
                             : tripType ===
                             "ROUND_TRIP"
                                 ? "Select Return Flight"
-                                : "Review Booking"}
+                                : "Review Booking")}
                 </button>
             </div>
         </div>

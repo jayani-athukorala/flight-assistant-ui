@@ -15,7 +15,8 @@ interface FlightSearchModalProps {
     onClose: () => void;
     onSearch: (
         origin: Airport,
-        destination: Airport
+        destination: Airport,
+        departureDate: string
     ) => void;
 
     initialOrigin?: Airport | null;
@@ -26,7 +27,8 @@ interface FlightSearchDialogProps {
     onClose: () => void;
     onSearch: (
         origin: Airport,
-        destination: Airport
+        destination: Airport,
+        departureDate: string
     ) => void;
     initialOrigin: Airport | null;
     initialDestination: Airport | null;
@@ -43,6 +45,16 @@ const FlightSearchDialog = ({
 
     const [destination, setDestination] =
         useState<Airport | null>(initialDestination);
+
+    const today = () => {
+        const value = new Date();
+        const offset = value.getTimezoneOffset();
+        return new Date(value.getTime() - offset * 60_000)
+            .toISOString()
+            .slice(0, 10);
+    };
+
+    const [departureDate, setDepartureDate] = useState(today);
 
     useEffect(() => {
         const handleEscape = (event: KeyboardEvent) => {
@@ -79,6 +91,7 @@ const FlightSearchDialog = ({
     const canSearch =
         origin !== null &&
         destination !== null &&
+        Boolean(departureDate) &&
         !sameAirport;
 
     const handleSubmit = (
@@ -94,7 +107,7 @@ const FlightSearchDialog = ({
             return;
         }
 
-        onSearch(origin, destination);
+        onSearch(origin, destination, departureDate);
     };
 
     const swapAirports = () => {
@@ -246,6 +259,20 @@ const FlightSearchDialog = ({
                             )}
                         </div>
                     </div>
+
+                    <label className="mt-6 block text-sm font-semibold text-slate-700">
+                        Departure date
+                        <div className="relative mt-2">
+                            <input
+                                type="date"
+                                required
+                                min={today()}
+                                value={departureDate}
+                                onChange={(event) => setDepartureDate(event.target.value)}
+                                className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm text-slate-900 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+                            />
+                        </div>
+                    </label>
 
                     {sameAirport && (
                         <p

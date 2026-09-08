@@ -29,6 +29,7 @@ interface AvailableFlightsNavigationState {
     destination?: Airport;
     openSearch?: boolean;
     searchRequestId?: number;
+    searchDate?: string;
     outboundFlight?: Flight;
     tripType?: TripType;
     passengers?: PassengerRequest[];
@@ -88,7 +89,7 @@ const AvailableFlightsPage = () => {
         originId !== destinationId;
 
     const minimumDateValue = outboundFlight
-        ? formatDateValue(new Date(outboundFlight.arrivalTime))
+        ? formatDateValue(addDays(new Date(outboundFlight.arrivalTime), 1))
         : formatDateValue(new Date());
 
     const initialDate = dateFromValue(minimumDateValue);
@@ -154,7 +155,19 @@ const AvailableFlightsPage = () => {
                     error: null,
                 });
 
+                const requestedDate = navigationState?.searchDate;
+                const requestedDateIsValid =
+                    Boolean(requestedDate) &&
+                    requestedDate! >= minimumDateValue;
+                const requestedDateHasFlights =
+                    requestedDateIsValid &&
+                    eligibleFlights.some(
+                        (flight) =>
+                            flight.departureTime.slice(0, 10) === requestedDate
+                    );
+
                 const firstDate =
+                    (requestedDateHasFlights ? requestedDate : null) ??
                     eligibleFlights[0]?.departureTime.slice(0, 10) ??
                     minimumDateValue;
                 const nextDate = dateFromValue(firstDate);
@@ -174,7 +187,7 @@ const AvailableFlightsPage = () => {
         return () => {
             active = false;
         };
-    }, [destinationId, minimumDateValue, originId, outboundFlight, routeKey]);
+    }, [destinationId, minimumDateValue, navigationState?.searchDate, originId, outboundFlight, routeKey]);
 
     const selectedDateValue = formatDateValue(selectedDate);
     const weekDays = useMemo(
@@ -257,7 +270,11 @@ const AvailableFlightsPage = () => {
                 ? `Airport #${destinationId}`
                 : "Choose destination";
 
-    const handleRouteSearch = (origin: Airport, destination: Airport) => {
+    const handleRouteSearch = (
+        origin: Airport,
+        destination: Airport,
+        departureDate: string
+    ) => {
         setModalRequested(false);
         navigate("/available", {
             state: {
@@ -265,6 +282,7 @@ const AvailableFlightsPage = () => {
                 destinationId: destination.id,
                 origin,
                 destination,
+                searchDate: departureDate,
                 openSearch: false,
             },
             replace: true,
@@ -376,10 +394,12 @@ const AvailableFlightsPage = () => {
                                 <div>
                                     <h2 className="flex items-center gap-2 font-bold text-slate-950">
                                         <CalendarDays className="text-blue-600" size={20} />
-                                        Select departure date
+                                        {isReturnSelection ? "Select return date" : "Select departure date"}
                                     </h2>
                                     <p className="mt-1 text-sm text-slate-500">
-                                        Blue dots indicate dates with available flights.
+                                        {isReturnSelection
+                                            ? "Choose a return date after your outbound flight arrives."
+                                            : "Blue dots indicate dates with available flights."}
                                     </p>
                                 </div>
                                 <button
@@ -573,7 +593,9 @@ const AvailableFlightsPage = () => {
                                     Select departure date
                                 </h2>
                                 <p className="mt-1 text-sm text-slate-500">
-                                    Choose an available travel date.
+                                    {isReturnSelection
+                                        ? "Return dates before the outbound arrival are disabled."
+                                        : "Choose an available travel date."}
                                 </p>
                             </div>
                             <button

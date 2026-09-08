@@ -56,9 +56,8 @@ export function formatAssistantText(
     }
 
     if (response.bookings.length > 0) {
-        return response.bookings.length === 1
-            ? "I found one booking linked to your account."
-            : `I found ${response.bookings.length} bookings linked to your account.`;
+        const count = response.bookings.length;
+        return `${count === 1 ? "This is your current booking" : `These are your ${count} current bookings`}. Review the details below. To cancel one, click the Cancel booking button on the booking you wish to cancel, then confirm your choice.`;
     }
 
     if (
@@ -74,7 +73,7 @@ export function formatAssistantText(
     }
 
     if (response.type === "AUTHENTICATION_REQUIRED") {
-        return "Please sign in to view or manage your bookings.";
+        return "You need to sign in before I can view or manage your bookings. Choose Sign in or Create account below; the form will open here in the assistant and your task will continue afterward.";
     }
 
     if (response.type === "ERROR") {
