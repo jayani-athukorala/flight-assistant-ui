@@ -38,6 +38,8 @@ interface SeatsStepProps {
     passengers: PassengerRequest[];
 
     direction?: Direction;
+    compact?: boolean;
+    onSeatClassChange?: (seatClass: SeatClass) => void;
 
     onPassengerSeatChange: (
         passengerIndex: number,
@@ -73,6 +75,8 @@ const SeatsStep = ({
                        seatClass,
                        passengers,
                        direction = "OUTBOUND",
+                       compact = false,
+                       onSeatClassChange,
                        onPassengerSeatChange,
                        onContinue,
                        continueLabel,
@@ -268,10 +272,10 @@ const SeatsStep = ({
     };
 
     return (
-        <div className="space-y-6">
+        <div className={compact ? "space-y-3" : "space-y-6"}>
             {/* Header */}
-            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-                <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div className={`border border-slate-200 bg-white shadow-sm ${compact ? "rounded-xl p-3" : "rounded-2xl p-6"}`}>
+                <div className={compact ? "space-y-2" : "flex flex-col gap-4 md:flex-row md:items-center md:justify-between"}>
                     <div>
                         <p className="text-xs font-bold uppercase tracking-[0.18em] text-blue-600">
                             {isReturnDirection
@@ -279,27 +283,39 @@ const SeatsStep = ({
                                 : "Outbound Flight"}
                         </p>
 
-                        <h2 className="mt-1 text-2xl font-bold text-slate-900">
+                        <h2 className={`mt-1 font-bold text-slate-900 ${compact ? "text-base" : "text-2xl"}`}>
                             Choose your {seatClass.toLowerCase()} seat
                         </h2>
 
-                        <p className="mt-1 text-sm text-slate-500">
+                        <p className={`mt-1 text-slate-500 ${compact ? "text-xs" : "text-sm"}`}>
                             {isReturnDirection && returnFlight
                                 ? flightRouteLabel(returnFlight)
                                 : flightRouteLabel(flight)}
                         </p>
                     </div>
 
-                    <div className="flex items-center gap-2 rounded-xl bg-slate-100 px-4 py-3 text-sm text-slate-700">
-                        <Users size={17} />
-                        Passenger{" "}
-                        <span className="font-bold">
-                            {activePassenger + 1}
-                        </span>{" "}
-                        of{" "}
-                        <span className="font-bold">
-                            {passengers.length}
-                        </span>
+                    <div className={compact ? "flex flex-wrap gap-2" : "flex flex-col gap-2"}>
+                        {onSeatClassChange && (
+                            <label className={`font-semibold text-slate-700 ${compact ? "text-xs" : "text-sm"}`}>
+                                Seat class
+                                <select
+                                    value={seatClass}
+                                    onChange={(event) => onSeatClassChange(event.target.value as SeatClass)}
+                                    className={`ml-2 border border-slate-300 bg-white outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 ${compact ? "rounded-md px-2 py-1.5 text-xs" : "rounded-lg px-3 py-2 text-sm"}`}
+                                >
+                                    <option value="ECONOMY">Economy</option>
+                                    <option value="PREMIUM_ECONOMY">Premium economy</option>
+                                    <option value="BUSINESS">Business</option>
+                                    <option value="FIRST_CLASS">First class</option>
+                                </select>
+                            </label>
+                        )}
+
+                        <div className={`flex items-center gap-2 bg-slate-100 text-slate-700 ${compact ? "w-fit rounded-lg px-2.5 py-1.5 text-xs" : "rounded-xl px-4 py-3 text-sm"}`}>
+                            <Users size={17} />
+                            Passenger <span className="font-bold">{activePassenger + 1}</span>
+                            of <span className="font-bold">{passengers.length}</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -326,7 +342,7 @@ const SeatsStep = ({
                                         index
                                     )
                                 }
-                                className={`rounded-lg px-4 py-2 text-sm font-semibold ${
+                                className={`${compact ? "rounded-md px-2.5 py-1.5 text-xs" : "rounded-lg px-4 py-2 text-sm"} font-semibold ${
                                     activePassenger ===
                                     index
                                         ? "bg-blue-600 text-white"
@@ -344,7 +360,7 @@ const SeatsStep = ({
 
             {/* Loading */}
             {currentLoading && (
-                <div className="flex items-center justify-center rounded-2xl bg-white p-12 shadow-sm">
+                <div className={`flex items-center justify-center bg-white shadow-sm ${compact ? "rounded-xl p-6" : "rounded-2xl p-12"}`}>
                     <div className="text-center">
                         <Loader2 className="mx-auto h-8 w-8 animate-spin text-blue-600" />
 
@@ -358,7 +374,7 @@ const SeatsStep = ({
             {/* Error */}
             {!currentLoading &&
                 currentError && (
-                    <div className="rounded-2xl bg-red-50 p-6 text-red-700">
+                    <div className={`bg-red-50 text-red-700 ${compact ? "rounded-xl p-3 text-sm" : "rounded-2xl p-6"}`}>
                         {currentError}
                     </div>
                 )}
@@ -366,8 +382,8 @@ const SeatsStep = ({
             {/* Seats */}
             {!currentLoading &&
                 !currentError && (
-                    <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-                        <div className="mb-6 flex flex-wrap gap-4 text-sm text-slate-600">
+                    <div className={`border border-slate-200 bg-white shadow-sm ${compact ? "rounded-xl p-3" : "rounded-2xl p-6"}`}>
+                        <div className={`flex flex-wrap text-slate-600 ${compact ? "mb-3 gap-2 text-xs" : "mb-6 gap-4 text-sm"}`}>
                             <div className="flex items-center gap-2">
                                 <Armchair className="h-4 w-4" />
                                 Available
@@ -390,12 +406,12 @@ const SeatsStep = ({
                                 </p>
                             </div>
                         ) : (
-                            <div className="rounded-[2rem] border-2 border-slate-200 bg-slate-50 p-4 sm:p-6">
-                                <div className="mb-6 flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-widest text-slate-400">
+                            <div className={`border-2 border-slate-200 bg-slate-50 ${compact ? "rounded-xl p-2" : "rounded-[2rem] p-4 sm:p-6"}`}>
+                                <div className={`flex items-center justify-center gap-2 font-bold uppercase tracking-widest text-slate-400 ${compact ? "mb-3 text-[10px]" : "mb-6 text-xs"}`}>
                                     <Plane size={15} /> Front of aircraft
                                 </div>
 
-                                <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6">
+                                <div className={compact ? "grid grid-cols-3 gap-2" : "grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6"}>
                                     {currentSeats.map(
                                         (seat) => {
                                             const taken =
@@ -421,7 +437,7 @@ const SeatsStep = ({
                                                             seat
                                                         )
                                                     }
-                                                    className={`rounded-xl border p-3 text-center transition ${
+                                                    className={`${compact ? "rounded-lg p-2" : "rounded-xl p-3"} border text-center transition ${
                                                         taken
                                                             ? "cursor-not-allowed border-slate-200 bg-slate-100 text-slate-400"
                                                             : selected
@@ -429,15 +445,15 @@ const SeatsStep = ({
                                                                 : "border-slate-200 bg-white hover:border-blue-400 hover:bg-blue-50"
                                                     }`}
                                                 >
-                                                    <Armchair className="mx-auto h-5 w-5" />
+                                                    <Armchair className={`mx-auto ${compact ? "h-4 w-4" : "h-5 w-5"}`} />
 
-                                                    <p className="mt-1 text-sm font-bold">
+                                                    <p className={`mt-1 font-bold ${compact ? "text-xs" : "text-sm"}`}>
                                                         {
                                                             seat.seatNumber
                                                         }
                                                     </p>
 
-                                                    <p className="text-xs">
+                                                    <p className={compact ? "text-[10px]" : "text-xs"}>
                                                         {priceFormatter.format(seat.price)}
                                                     </p>
                                                 </button>
@@ -449,7 +465,7 @@ const SeatsStep = ({
                         )}
 
                         {selectedSeat && (
-                            <div className="mt-6 rounded-xl bg-blue-50 p-4 text-blue-800">
+                            <div className={`${compact ? "mt-3 rounded-lg p-2.5 text-xs" : "mt-6 rounded-xl p-4"} bg-blue-50 text-blue-800`}>
                                 Selected seat:{" "}
                                 <strong>
                                     {
@@ -463,7 +479,7 @@ const SeatsStep = ({
                 )}
 
             {/* Navigation */}
-            <div className="flex justify-between">
+            <div className={`flex justify-between ${compact ? "gap-2" : ""}`}>
                 <button
                     type="button"
                     disabled={
@@ -478,7 +494,7 @@ const SeatsStep = ({
                                 )
                         )
                     }
-                    className="rounded-lg border border-slate-300 px-5 py-2.5 font-semibold disabled:cursor-not-allowed disabled:opacity-40"
+                    className={`${compact ? "px-3 py-2 text-xs" : "px-5 py-2.5"} rounded-lg border border-slate-300 font-semibold disabled:cursor-not-allowed disabled:opacity-40`}
                 >
                     Previous
                 </button>
@@ -505,7 +521,7 @@ const SeatsStep = ({
                         1 &&
                         !seatsComplete
                     }
-                    className="rounded-lg bg-blue-600 px-5 py-2.5 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-40"
+                    className={`${compact ? "px-3 py-2 text-xs" : "px-5 py-2.5"} rounded-lg bg-blue-600 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-40`}
                 >
                     {activePassenger <
                     passengers.length - 1

@@ -34,18 +34,7 @@ export function formatAssistantText(
     }
 
     if (response.flights.length > 0) {
-        const flights = [...response.flights].sort(
-            (first, second) =>
-                new Date(first.departureTime).getTime() -
-                new Date(second.departureTime).getTime(),
-        );
-        const firstFlight = flights[0];
-        const origin = firstFlight.origin.city || firstFlight.origin.code;
-        const destination = firstFlight.destination.city || firstFlight.destination.code;
-
-        return flights.length === 1
-            ? `I found one available flight from ${origin} to ${destination}. Select it below to continue.`
-            : `I found available flights from ${origin} to ${destination}. Showing the next ${Math.min(flights.length, 10)} departures below.`;
+        return cleanedText;
     }
 
     if (response.availableSeats.length > 0) {
@@ -56,8 +45,7 @@ export function formatAssistantText(
     }
 
     if (response.bookings.length > 0) {
-        const count = response.bookings.length;
-        return `${count === 1 ? "This is your current booking" : `These are your ${count} current bookings`}. Review the details below. To cancel one, click the Cancel booking button on the booking you wish to cancel, then confirm your choice.`;
+        return cleanedText;
     }
 
     if (

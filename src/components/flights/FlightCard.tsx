@@ -279,7 +279,7 @@ const FlightCard = ({
                         {flight.startingPrice !== null
                             ? new Intl.NumberFormat("en-IE", {
                                 style: "currency",
-                                currency: "EUR",
+                                currency: "SEK",
                             }).format(Number(flight.startingPrice))
                             : "Price unavailable"}
                     </p>

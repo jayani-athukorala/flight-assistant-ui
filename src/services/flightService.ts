@@ -3,6 +3,7 @@ import type {
     Flight,
     FlightSeat,
     SeatClass,
+    CreateFlightRequest,
 } from "../types/Flight";
 
 export interface FlightAdminSearchParams {
@@ -71,5 +72,12 @@ export const getAvailableSeats = async (
         }
     );
 
+    return data;
+};
+
+export const createFlight = async (
+    request: CreateFlightRequest
+): Promise<Flight> => {
+    const { data } = await api.post<Flight>("/flights", request);
     return data;
 };

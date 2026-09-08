@@ -5,6 +5,7 @@ import {
     Clock3,
     Loader2,
     Plane,
+    Plus,
     RefreshCw,
     Search,
     ShieldCheck,
@@ -18,21 +19,24 @@ import FlightGrid from "../components/flights/FlightGrid";
 import { getFlights } from "../services/flightService";
 import { useAuth } from "../context/useAuth";
 import type { Flight } from "../types/Flight";
+import CreateFlightModal from "../components/flights/CreateFlightModal";
 
 type StatusFilter =
     | "ALL"
     | "SCHEDULED"
     | "BOARDING"
-    | "DELAYED"
     | "DEPARTED"
+    | "COMPLETED"
+    | "FULL"
     | "CANCELLED";
 
 const STATUS_OPTIONS: Array<{ value: StatusFilter; label: string }> = [
     { value: "ALL", label: "All statuses" },
     { value: "SCHEDULED", label: "Scheduled" },
     { value: "BOARDING", label: "Boarding" },
-    { value: "DELAYED", label: "Delayed" },
     { value: "DEPARTED", label: "Departed" },
+    { value: "COMPLETED", label: "Completed" },
+    { value: "FULL", label: "Full" },
     { value: "CANCELLED", label: "Cancelled" },
 ];
 
@@ -53,11 +57,12 @@ const FlightsPage = () => {
     const isAdmin = user?.role === "ADMIN";
     const [flights, setFlights] = useState<Flight[]>([]);
     const [date, setDate] = useState(localDate(new Date()));
-    const [status, setStatus] = useState<StatusFilter>("ALL");
+    const [status, setStatus] = useState<StatusFilter>("SCHEDULED");
     const [search, setSearch] = useState("");
     const [debouncedSearch, setDebouncedSearch] = useState("");
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [createOpen, setCreateOpen] = useState(false);
 
     useEffect(() => {
         const timeout = window.setTimeout(
@@ -92,29 +97,40 @@ const FlightsPage = () => {
         void loadFlights();
     }, [loadFlights]);
 
+    useEffect(() => {
+        const interval = window.setInterval(() => void loadFlights(), 60_000);
+        return () => window.clearInterval(interval);
+    }, [loadFlights]);
+
+    const filteredFlights = useMemo(() => flights.filter((flight) => {
+        const matchesDate = !date || flight.departureTime.slice(0, 10) === date;
+        const matchesStatus = status === "ALL" || flight.status === status;
+        const terms = `${flight.flightNumber} ${flight.airline} ${flight.origin.code} ${flight.origin.city} ${flight.destination.code} ${flight.destination.city}`.toLowerCase();
+        const matchesSearch = !debouncedSearch || terms.includes(debouncedSearch.toLowerCase());
+        return matchesDate && matchesStatus && matchesSearch;
+    }), [date, debouncedSearch, flights, status]);
+
     const statistics = useMemo(() => {
         const now = Date.now();
         return {
-            total: flights.length,
-            scheduled: flights.filter(
+            total: filteredFlights.length,
+            scheduled: filteredFlights.filter(
                 (flight) => flight.status === "SCHEDULED"
             ).length,
-            attention: flights.filter(
+            attention: filteredFlights.filter(
                 (flight) =>
-                    flight.status === "DELAYED" ||
-                    flight.status === "CANCELLED"
+                    flight.status === "CANCELLED" || flight.status === "FULL"
             ).length,
-            completed: flights.filter(
-                (flight) =>
-                    flight.status === "DEPARTED" ||
-                    new Date(flight.departureTime).getTime() <= now
+            completed: filteredFlights.filter(
+                (flight) => flight.status === "COMPLETED" ||
+                    (flight.status === "DEPARTED" && new Date(flight.departureTime).getTime() <= now)
             ).length,
         };
-    }, [flights]);
+    }, [filteredFlights]);
 
     const resetFilters = () => {
         setDate(localDate(new Date()));
-        setStatus("ALL");
+        setStatus("SCHEDULED");
         setSearch("");
     };
 
@@ -139,15 +155,14 @@ const FlightsPage = () => {
                                     Monitor schedules, disruptions, and departures across the network.
                                 </p>
                             </div>
-                            <button
-                                type="button"
-                                onClick={() => void loadFlights()}
-                                disabled={loading}
-                                className="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-5 py-3 font-semibold text-slate-900 transition hover:bg-blue-50 disabled:opacity-60"
-                            >
-                                <RefreshCw size={18} className={loading ? "animate-spin" : ""} />
-                                Refresh
-                            </button>
+                            <div className="flex flex-wrap gap-2">
+                                <button type="button" onClick={() => setCreateOpen(true)} className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-3 font-semibold text-white hover:bg-blue-500">
+                                    <Plus size={18} /> Create flight
+                                </button>
+                                <button type="button" onClick={() => void loadFlights()} disabled={loading} className="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-5 py-3 font-semibold text-slate-900 transition hover:bg-blue-50 disabled:opacity-60">
+                                    <RefreshCw size={18} className={loading ? "animate-spin" : ""} /> Refresh
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </header>
@@ -240,7 +255,7 @@ const FlightsPage = () => {
                     </div>
                 )}
 
-                {!loading && !error && flights.length === 0 && (
+                {!loading && !error && filteredFlights.length === 0 && (
                     <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-12 text-center">
                         <Plane className="mx-auto text-slate-300" size={38} />
                         <h2 className="mt-4 text-lg font-bold text-slate-900">No matching flights</h2>
@@ -248,20 +263,30 @@ const FlightsPage = () => {
                     </div>
                 )}
 
-                {!loading && !error && flights.length > 0 && (
+                {!loading && !error && filteredFlights.length > 0 && (
                     <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
                         <div className="mb-5 flex items-center justify-between">
                             <div>
                                 <h2 className="font-bold text-slate-900">Operational schedule</h2>
                                 <p className="text-sm text-slate-500">
-                                    {flights.length} {flights.length === 1 ? "result" : "results"}
+                                    {filteredFlights.length} {filteredFlights.length === 1 ? "result" : "results"}
                                 </p>
                             </div>
                         </div>
-                        <FlightGrid flights={flights} />
+                        <FlightGrid flights={filteredFlights} />
                     </section>
                 )}
             </div>
+
+            {createOpen && (
+                <CreateFlightModal
+                    onClose={() => setCreateOpen(false)}
+                    onCreated={(flight) => {
+                        setFlights((current) => [flight, ...current]);
+                        setCreateOpen(false);
+                    }}
+                />
+            )}
         </PageContainer>
     );
 };

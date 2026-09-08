@@ -10,6 +10,7 @@ import {
 import { useEffect, useRef, type ReactNode } from "react";
 import type { AssistantUiMessage } from "../../types/Assistant";
 import type { Flight } from "../../types/Flight";
+import type { Airport } from "../../types/Airport";
 import AssistantComposer from "./AssistantComposer";
 import AssistantMessage from "./AssistantMessage";
 
@@ -25,6 +26,7 @@ interface Props {
     onBookingChanged: () => void;
     onAuthenticationRequired: (purpose: "view" | "cancel") => void;
     onAuthenticate: (mode: "login" | "register") => void;
+    onChangeFlightDate: (origin: Airport, destination: Airport, date: string) => void;
 }
 
 export default function AssistantPanel(props: Props) {
@@ -109,6 +111,8 @@ export default function AssistantPanel(props: Props) {
                         onRetry={props.onSend}
                         onBookingChanged={props.onBookingChanged}
                         onAuthenticate={props.onAuthenticate}
+                        onChangeFlightDate={props.onChangeFlightDate}
+                        onCreateBooking={props.onOpenFlightSearch}
                     />
                 ))}
 

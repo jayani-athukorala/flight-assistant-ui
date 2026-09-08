@@ -16,7 +16,7 @@ interface BookingSummaryProps {
 
 const money = new Intl.NumberFormat("en-IE", {
     style: "currency",
-    currency: "EUR",
+    currency: "SEK",
 });
 
 const dateTime = new Intl.DateTimeFormat("en-GB", {

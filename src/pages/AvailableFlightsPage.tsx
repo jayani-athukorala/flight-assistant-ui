@@ -493,7 +493,7 @@ const AvailableFlightsPage = () => {
                                         ? "Price unavailable"
                                         : new Intl.NumberFormat("en-IE", {
                                             style: "currency",
-                                            currency: "EUR",
+                                            currency: "SEK",
                                         }).format(averagePrice)}
                                 </p>
                             </div>

@@ -125,7 +125,7 @@ const BookingReviewPage = ({
                     <span className="text-2xl font-bold text-blue-600">
                         {new Intl.NumberFormat("en-IE", {
                             style: "currency",
-                            currency: "EUR",
+                            currency: "SEK",
                         }).format(total)}
                     </span>
                 </div>

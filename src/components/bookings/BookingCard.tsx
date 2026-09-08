@@ -40,7 +40,7 @@ const timeFormatter = new Intl.DateTimeFormat("en-GB", {
 
 const priceFormatter = new Intl.NumberFormat("en-IE", {
     style: "currency",
-    currency: "EUR",
+    currency: "SEK",
 });
 
 const statusStyles: Record<string, string> = {

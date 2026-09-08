@@ -1,8 +1,36 @@
 import api from "../api/axios";
 import type {
+    BookingStatus,
     BookingRequest,
     BookingResponse,
 } from "../types/Booking";
+
+export interface PageResponse<T> {
+    content: T[];
+    number: number;
+    size: number;
+    totalElements: number;
+    totalPages: number;
+}
+
+export interface AdminBookingSearchParams {
+    status?: BookingStatus;
+    email?: string;
+    from?: string;
+    to?: string;
+    page?: number;
+    size?: number;
+}
+
+export const getAdminBookings = async (
+    params: AdminBookingSearchParams
+): Promise<PageResponse<BookingResponse>> => {
+    const { data } = await api.get<PageResponse<BookingResponse>>(
+        "/admin/bookings",
+        { params }
+    );
+    return data;
+};
 
 export interface MyBookingsOptions {
     archived?: boolean;

@@ -25,3 +25,13 @@ export interface FlightSeat {
     seatClass: SeatClass;
     price: number;
 }
+
+export interface CreateFlightRequest {
+    flightNumber: string;
+    airline: string;
+    originAirportId: number;
+    destinationAirportId: number;
+    departureTime: string;
+    arrivalTime: string;
+    economyBasePrice: number;
+}

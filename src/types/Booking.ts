@@ -42,6 +42,7 @@ export interface BookingSeat {
 export interface BookingResponse {
     id: number;
     bookingReference: string;
+    createdByEmail: string;
     bookingDate: string;
     cancelledAt: string | null;
     archivedAt: string | null;

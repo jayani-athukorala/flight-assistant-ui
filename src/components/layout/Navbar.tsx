@@ -25,9 +25,12 @@ const Navbar = () => {
     const navItems = [
         ...publicItems,
         ...(isAdmin
-            ? [{ name: "Flight operations", path: "/flights", icon: Plane }]
+            ? [
+                { name: "Flight operations", path: "/flights", icon: Plane },
+                { name: "Booking operations", path: "/admin/bookings", icon: BookOpen },
+            ]
             : []),
-        ...(isAuthenticated
+        ...(isAuthenticated && !isAdmin
             ? [{ name: "My bookings", path: "/bookings", icon: BookOpen }]
             : []),
     ];

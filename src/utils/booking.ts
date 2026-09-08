@@ -43,7 +43,10 @@ export const formatDateTime = (
 export const formatPrice = (
     value: number
 ): string => {
-    return `€${value.toFixed(2)}`;
+    return new Intl.NumberFormat("sv-SE", {
+    style: "currency",
+    currency: "SEK",
+}).format(value);
 };
 
 export const getPassengerName = (

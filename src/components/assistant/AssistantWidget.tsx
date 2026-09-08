@@ -1,10 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { assistantService } from "../../services/assistantService";
 import { bookFlight, getMyBookings } from "../../services/bookingService";
 import { getAvailableSeats, getReturnFlights } from "../../services/flightService";
 import { useAuth } from "../../context/useAuth";
-import type { AssistantResponse, AssistantUiMessage } from "../../types/Assistant";
-import type { BookingResponse, PassengerRequest, TripType } from "../../types/Booking";
+import type { TripType } from "../../types/Booking";
 import type { Flight, FlightSeat, SeatClass } from "../../types/Flight";
 import type { Airport } from "../../types/Airport";
 import AssistantButton from "./AssistantButton";
@@ -15,93 +13,20 @@ import SeatsStep from "../bookings/SeatsStep";
 import FlightCard from "../flights/FlightCard";
 import BookingSummary from "../bookings/BookingSummary";
 import BookingCard from "../bookings/BookingCard";
-import AuthForm from "../auth/AuthForm";
-
-const STORAGE_KEY = "skyroute.assistant.session";
-
-interface StoredSession {
-    conversationId: string | null;
-    messages: AssistantUiMessage[];
-}
-
-const emptySession: StoredSession = {
-    conversationId: null,
-    messages: [],
-};
-
-type BookingPhase =
-    | "COUNT"
-    | "DETAILS"
-    | "OUTBOUND_SEATS"
-    | "RETURN_CHOICE"
-    | "RETURN_DATE"
-    | "RETURN_FLIGHTS"
-    | "RETURN_SEATS"
-    | "REVIEW"
-    | "COMPLETE";
-
-interface AssistantBookingFlow {
-    phase: BookingPhase;
-    outboundFlight: Flight;
-    returnFlight: Flight | null;
-    tripType: TripType;
-    seatClass: SeatClass;
-    passengerCount: number;
-    passengers: PassengerRequest[];
-    returnDate: string;
-    returnFlights: Flight[];
-    outboundSeats: FlightSeat[];
-    returnSeats: FlightSeat[];
-    booking: BookingResponse | null;
-    loading: boolean;
-    error: string | null;
-}
-
-const createPassenger = (): PassengerRequest => ({
-    firstName: "",
-    lastName: "",
-    passportNumber: "",
-    email: "",
-    outboundSeatId: 0,
-    returnSeatId: null,
-});
-
-const readSession = (): StoredSession => {
-    try {
-        const value = sessionStorage.getItem(STORAGE_KEY);
-
-        if (!value) {
-            return emptySession;
-        }
-
-        const parsed = JSON.parse(value) as StoredSession;
-
-        return Array.isArray(parsed.messages)
-            ? parsed
-            : emptySession;
-    } catch {
-        return emptySession;
-    }
-};
-
-const uiMessage = (
-    response: AssistantResponse
-): AssistantUiMessage => ({
-    id: crypto.randomUUID(),
-    role: "assistant",
-    text: response.message,
-    response,
-});
+import AssistantAuthPanel from "./AssistantAuthPanel";
+import { useAssistantChat } from "../../hooks/useAssistantChat";
+import {
+    createBookingFlow,
+    createPassenger,
+    type AssistantBookingFlow,
+} from "./assistantBookingFlow";
 
 export default function AssistantWidget() {
     const { isAuthenticated } = useAuth();
 
     const [open, setOpen] = useState(false);
 
-    const [session, setSession] =
-        useState<StoredSession>(readSession);
-
-    const [loading, setLoading] = useState(false);
+    const { session, setSession, loading, send, appendLocalAssistant, clearConversation } = useAssistantChat();
 
     const [flightSearchOpen, setFlightSearchOpen] =
         useState(false);
@@ -115,99 +40,6 @@ export default function AssistantWidget() {
     const [authMode, setAuthMode] = useState<"login" | "register" | null>(null);
     const [postAuthAction, setPostAuthAction] = useState<"booking" | "view" | "cancel" | null>(null);
 
-    useEffect(() => {
-        sessionStorage.setItem(
-            STORAGE_KEY,
-            JSON.stringify(session)
-        );
-    }, [session]);
-
-    const appendResponse = useCallback(
-        (response: AssistantResponse) => {
-            setSession((current) => ({
-                conversationId: response.conversationId,
-                messages: [
-                    ...current.messages,
-                    uiMessage(response),
-                ],
-            }));
-        },
-        []
-    );
-
-    const appendLocalAssistant = useCallback(
-        (text: string, authenticationRequired = false) => {
-            setSession((current) => ({
-                ...current,
-                messages: [
-                    ...current.messages,
-                    {
-                        id: crypto.randomUUID(),
-                        role: "assistant",
-                        text,
-                        authenticationRequired,
-                    },
-                ],
-            }));
-        },
-        []
-    );
-
-    const send = useCallback(
-        async (
-            message: string,
-            displayText?: string
-        ) => {
-            if (loading) return;
-
-            const userMessage: AssistantUiMessage = {
-                id: crypto.randomUUID(),
-                role: "user",
-                text: displayText ?? message,
-            };
-
-            setSession((current) => ({
-                ...current,
-                messages: [
-                    ...current.messages,
-                    userMessage,
-                ],
-            }));
-
-            setLoading(true);
-
-            try {
-                const response =
-                    await assistantService.chat({
-                        conversationId:
-                            session.conversationId,
-                        message,
-                    });
-
-                appendResponse(response);
-            } catch {
-                setSession((current) => ({
-                    ...current,
-                    messages: [
-                        ...current.messages,
-                        {
-                            id: crypto.randomUUID(),
-                            role: "assistant",
-                            text: "",
-                            failedPrompt: message,
-                        },
-                    ],
-                }));
-            } finally {
-                setLoading(false);
-            }
-        },
-        [
-            appendResponse,
-            loading,
-            session.conversationId,
-        ]
-    );
 
     const startBooking = useCallback(
         (flight: Flight) => {
@@ -222,23 +54,7 @@ export default function AssistantWidget() {
                 return;
             }
 
-            setFlow({
-                phase: "COUNT",
-                outboundFlight: flight,
-                returnFlight: null,
-                tripType: "ONE_WAY",
-                seatClass: "ECONOMY",
-                passengerCount: 1,
-                passengers: [createPassenger()],
-                returnDate:
-                    flight.departureTime.split("T")[0],
-                returnFlights: [],
-                outboundSeats: [],
-                returnSeats: [],
-                booking: null,
-                loading: false,
-                error: null,
-            });
+            setFlow(createBookingFlow(flight));
 
             appendLocalAssistant(
                 "Great. How many passengers are travelling?"
@@ -252,6 +68,7 @@ export default function AssistantWidget() {
 
     const requestProtectedAction = useCallback((purpose: "view" | "cancel") => {
         if (isAuthenticated) {
+            setFlow(null);
             void send(
                 purpose === "cancel"
                     ? "Show my active bookings so I can choose one to cancel using the booking card."
@@ -401,6 +218,38 @@ export default function AssistantWidget() {
         );
     };
 
+    const updateSeatClass = (seatClass: SeatClass) => {
+        setFlow((current) => current
+            ? {
+                ...current,
+                seatClass,
+                passengers: current.passengers.map((passenger) => ({
+                    ...passenger,
+                    outboundSeatId: 0,
+                })),
+                outboundSeats: [],
+                error: null,
+            }
+            : current
+        );
+    };
+
+    const updateReturnSeatClass = (returnSeatClass: SeatClass) => {
+        setFlow((current) => current
+            ? {
+                ...current,
+                returnSeatClass,
+                passengers: current.passengers.map((passenger) => ({
+                    ...passenger,
+                    returnSeatId: null,
+                })),
+                returnSeats: [],
+                error: null,
+            }
+            : current
+        );
+    };
+
     const prepareReview = async (
         tripType: TripType,
         returnFlight: Flight | null
@@ -431,7 +280,7 @@ export default function AssistantWidget() {
                 returnFlight
                     ? getAvailableSeats(
                         returnFlight.id,
-                        flow.seatClass
+                        flow.returnSeatClass
                     )
                     : Promise.resolve(
                         [] as FlightSeat[]
@@ -555,7 +404,7 @@ export default function AssistantWidget() {
             );
 
             appendLocalAssistant(
-                `Booking ${booking.bookingReference} was created successfully.`
+                `Your booking was created successfully. Reference: ${booking.bookingReference}. Route: ${booking.outboundFlight.origin.code} to ${booking.outboundFlight.destination.code}. Passengers: ${booking.passengers.length}. Total: €${booking.totalPrice.toFixed(2)}. You can review it below, then choose whether to view all bookings or cancel a booking.`
             );
         } catch (error: unknown) {
             const message =
@@ -649,33 +498,16 @@ export default function AssistantWidget() {
         }, []);
 
     const clear = async () => {
-        const id =
-            session.conversationId;
-
-        setSession(emptySession);
         setFlow(null);
         setAuthMode(null);
         setPendingFlight(null);
         setPostAuthAction(null);
-
-        if (id) {
-            try {
-                await assistantService
-                    .clearConversation(id);
-            } catch {
-                // Local history is still safely cleared.
-            }
-        }
+        await clearConversation();
     };
 
     useEffect(() => {
         const resetAssistantSession =
             () => {
-                sessionStorage.removeItem(
-                    STORAGE_KEY
-                );
-
-                setSession(emptySession);
                 setFlow(null);
             };
 
@@ -705,27 +537,12 @@ export default function AssistantWidget() {
     const workflow = useMemo(() => {
         if (authMode) {
             return (
-                <section className="rounded-2xl border border-blue-200 bg-white p-4 shadow-sm">
-                    <h3 className="font-bold text-slate-900">
-                        {authMode === "login" ? "Sign in inside the assistant" : "Create your account"}
-                    </h3>
-                    <p className="mb-4 mt-1 text-xs leading-5 text-slate-500">
-                        Complete the form below and your previous task will continue automatically.
-                    </p>
-                    <AuthForm
-                        key={authMode}
-                        mode={authMode}
-                        compact
-                        loginAfterRegister
-                        onSuccess={authenticationComplete}
-                    />
-                    <div className="mt-3 flex items-center justify-between text-xs">
-                        <button type="button" onClick={() => setAuthMode(authMode === "login" ? "register" : "login")} className="font-semibold text-blue-700 hover:underline">
-                            {authMode === "login" ? "Create an account" : "Already registered? Sign in"}
-                        </button>
-                        <button type="button" onClick={() => setAuthMode(null)} className="text-slate-500 hover:text-slate-800">Close</button>
-                    </div>
-                </section>
+                <AssistantAuthPanel
+                    mode={authMode}
+                    onModeChange={setAuthMode}
+                    onSuccess={authenticationComplete}
+                    onClose={() => setAuthMode(null)}
+                />
             );
         }
 
@@ -831,6 +648,7 @@ export default function AssistantWidget() {
                     {error}
 
                     <SeatsStep
+                        compact
                         flight={
                             flow.outboundFlight
                         }
@@ -842,6 +660,7 @@ export default function AssistantWidget() {
                             flow.passengers
                         }
                         direction="OUTBOUND"
+                        onSeatClassChange={updateSeatClass}
                         onPassengerSeatChange={
                             updateSeat
                         }
@@ -1088,6 +907,7 @@ export default function AssistantWidget() {
                     {error}
 
                     <SeatsStep
+                        compact
                         flight={
                             flow.outboundFlight
                         }
@@ -1096,12 +916,13 @@ export default function AssistantWidget() {
                         }
                         tripType="ROUND_TRIP"
                         seatClass={
-                            flow.seatClass
+                            flow.returnSeatClass
                         }
                         passengers={
                             flow.passengers
                         }
                         direction="RETURN"
+                        onSeatClassChange={updateReturnSeatClass}
                         onPassengerSeatChange={
                             updateSeat
                         }
@@ -1187,11 +1008,28 @@ export default function AssistantWidget() {
                         }
                     />
 
+                    <div className="rounded-xl border border-blue-100 bg-blue-50 p-3">
+                        <p className="text-xs leading-5 text-blue-900">
+                            What would you like to do next?
+                        </p>
+                        <div className="mt-2 grid grid-cols-2 gap-2">
+                            <button type="button" onClick={() => requestProtectedAction("view")} className="rounded-lg bg-blue-600 px-3 py-2 text-xs font-semibold text-white hover:bg-blue-700">
+                                View my bookings
+                            </button>
+                            <button type="button" onClick={() => requestProtectedAction("cancel")} className="rounded-lg border border-red-200 bg-white px-3 py-2 text-xs font-semibold text-red-700 hover:bg-red-50">
+                                Cancel a booking
+                            </button>
+                        </div>
+                    </div>
+
                     <button
                         type="button"
-                        onClick={() =>
-                            setFlow(null)
-                        }
+                        onClick={() => {
+                            setFlow(null);
+                            appendLocalAssistant(
+                                "Thank you for booking with SkyRoute. Have a pleasant journey, and come back anytime you need help with another flight."
+                            );
+                        }}
                         className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 font-semibold text-slate-700"
                     >
                         Finish
@@ -1207,6 +1045,7 @@ export default function AssistantWidget() {
         flow,
         appendLocalAssistant,
         refreshBookings,
+        requestProtectedAction,
     ]);
 
     /*
@@ -1268,6 +1107,7 @@ export default function AssistantWidget() {
                     }
                     onAuthenticationRequired={requestProtectedAction}
                     onAuthenticate={setAuthMode}
+                    onChangeFlightDate={handleModalSearch}
                 />
             )}
 

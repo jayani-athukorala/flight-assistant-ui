@@ -1,6 +1,8 @@
-import { Bot, LogIn } from "lucide-react";
+import { useRef, useState } from "react";
+import { Bot, CalendarDays, LogIn, Plane, Trash2 } from "lucide-react";
 import type { AssistantUiMessage } from "../../types/Assistant";
 import type { Flight } from "../../types/Flight";
+import type { Airport } from "../../types/Airport";
 import { formatAssistantText } from "../../utils/formatAssistantText";
 import AssistantError from "./AssistantError";
 import FlightCard from "../flights/FlightCard";
@@ -13,6 +15,8 @@ interface Props {
     onRetry: (prompt: string) => void;
     onBookingChanged: () => void;
     onAuthenticate: (mode: "login" | "register") => void;
+    onChangeFlightDate: (origin: Airport, destination: Airport, date: string) => void;
+    onCreateBooking: () => void;
 }
 
 export default function AssistantMessage({
@@ -22,7 +26,12 @@ export default function AssistantMessage({
     onRetry,
     onBookingChanged,
     onAuthenticate,
+    onChangeFlightDate,
+    onCreateBooking,
 }: Props) {
+    const [showDatePicker, setShowDatePicker] = useState(false);
+    const [flightDate, setFlightDate] = useState("");
+    const bookingResultsRef = useRef<HTMLDivElement>(null);
     const assistant = item.role === "assistant";
     const data = item.response;
     const displayedText = assistant
@@ -31,6 +40,15 @@ export default function AssistantMessage({
 
     const showAirportResults =
         Boolean(data?.airports.length) && !data?.flights.length;
+
+    const focusFirstCancelButton = () => {
+        const cancelButton = Array.from(
+            bookingResultsRef.current?.querySelectorAll("button") ?? []
+        ).find((button) => button.textContent?.trim().includes("Cancel booking"));
+
+        cancelButton?.scrollIntoView({ behavior: "smooth", block: "center" });
+        cancelButton?.focus();
+    };
 
     return (
         <div className="space-y-2">
@@ -97,27 +115,92 @@ export default function AssistantMessage({
             )}
 
             {data && data.flights.length > 0 && (
-                <div className="grid gap-3">
-                    {data.flights.map((flight) => (
-                        <FlightCard
-                            key={flight.id}
-                            flight={flight}
-                            onSelect={() => onSelectFlight(flight)}
-                            actionLabel="Select flight"
-                        />
-                    ))}
+                <div className="space-y-3">
+                    <div className="grid gap-3">
+                        {data.flights.map((flight) => (
+                            <FlightCard
+                                key={flight.id}
+                                flight={flight}
+                                onSelect={() => onSelectFlight(flight)}
+                                actionLabel="Select flight"
+                            />
+                        ))}
+                    </div>
+
+                    <button
+                        type="button"
+                        onClick={() => {
+                            setShowDatePicker((visible) => !visible);
+                            if (!flightDate) {
+                                setFlightDate(data.flights[0].departureTime.split("T")[0]);
+                            }
+                        }}
+                        className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-blue-200 bg-white px-3 py-2 text-xs font-semibold text-blue-700 hover:bg-blue-50"
+                    >
+                        <CalendarDays size={14} aria-hidden /> Change date
+                    </button>
+
+                    {showDatePicker && (
+                        <div className="rounded-xl border border-blue-100 bg-blue-50 p-3">
+                            <label className="text-xs font-semibold text-slate-700">
+                                Select another departure date
+                                <input
+                                    type="date"
+                                    value={flightDate}
+                                    onChange={(event) => setFlightDate(event.target.value)}
+                                    className="mt-1.5 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                                />
+                            </label>
+                            <button
+                                type="button"
+                                disabled={!flightDate || busy}
+                                onClick={() => onChangeFlightDate(
+                                    data.flights[0].origin,
+                                    data.flights[0].destination,
+                                    flightDate
+                                )}
+                                className="mt-2 w-full rounded-lg bg-blue-600 px-3 py-2 text-xs font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
+                            >
+                                Search this date
+                            </button>
+                        </div>
+                    )}
                 </div>
             )}
 
             {data && data.bookings.length > 0 && (
-                <div className="grid gap-3">
-                    {data.bookings.map((booking) => (
-                        <BookingCard
-                            key={booking.id}
-                            booking={booking}
-                            onChanged={onBookingChanged}
-                        />
-                    ))}
+                <div ref={bookingResultsRef} className="space-y-3">
+                    <div className="grid gap-3">
+                        {data.bookings.map((booking) => (
+                            <BookingCard
+                                key={booking.id}
+                                booking={booking}
+                                onChanged={onBookingChanged}
+                            />
+                        ))}
+                    </div>
+
+                    <div className="rounded-xl border border-blue-100 bg-blue-50 p-3">
+                        <p className="text-xs font-medium text-blue-900">
+                            What would you like to do next?
+                        </p>
+                        <div className="mt-2 grid grid-cols-2 gap-2">
+                        <button
+                            type="button"
+                            onClick={onCreateBooking}
+                            className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-blue-600 px-3 py-2.5 text-xs font-semibold text-white hover:bg-blue-700"
+                        >
+                            <Plane size={14} /> Create new booking
+                        </button>
+                        <button
+                            type="button"
+                            onClick={focusFirstCancelButton}
+                            className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-red-200 bg-white px-3 py-2.5 text-xs font-semibold text-red-700 hover:bg-red-50"
+                        >
+                            <Trash2 size={14} /> Cancel a booking
+                        </button>
+                        </div>
+                    </div>
                 </div>
             )}
 
