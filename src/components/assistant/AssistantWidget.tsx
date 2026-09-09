@@ -404,7 +404,7 @@ export default function AssistantWidget() {
             );
 
             appendLocalAssistant(
-                `Your booking was created successfully. Reference: ${booking.bookingReference}. Route: ${booking.outboundFlight.origin.code} to ${booking.outboundFlight.destination.code}. Passengers: ${booking.passengers.length}. Total: €${booking.totalPrice.toFixed(2)}. You can review it below, then choose whether to view all bookings or cancel a booking.`
+                `Your booking was created successfully. Reference: ${booking.bookingReference}. Route: ${booking.outboundFlight.origin.code} to ${booking.outboundFlight.destination.code}. Passengers: ${booking.passengers.length}. Total: ${new Intl.NumberFormat("sv-SE", { style: "currency", currency: "SEK" }).format(booking.totalPrice)}. You can review it below, then choose whether to view all bookings or cancel a booking.`
             );
         } catch (error: unknown) {
             const message =
@@ -504,6 +504,16 @@ export default function AssistantWidget() {
         setPostAuthAction(null);
         await clearConversation();
     };
+
+    const exitAssistant = useCallback(() => {
+        setFlow(null);
+        setAuthMode(null);
+        setPendingFlight(null);
+        setPostAuthAction(null);
+        appendLocalAssistant(
+            "Thank you for using SkyRoute. Have a pleasant journey, and come back anytime you need help with another flight."
+        );
+    }, [appendLocalAssistant]);
 
     useEffect(() => {
         const resetAssistantSession =
@@ -1012,28 +1022,18 @@ export default function AssistantWidget() {
                         <p className="text-xs leading-5 text-blue-900">
                             What would you like to do next?
                         </p>
-                        <div className="mt-2 grid grid-cols-2 gap-2">
+                        <div className="mt-2 grid grid-cols-3 gap-2">
                             <button type="button" onClick={() => requestProtectedAction("view")} className="rounded-lg bg-blue-600 px-3 py-2 text-xs font-semibold text-white hover:bg-blue-700">
                                 View my bookings
                             </button>
                             <button type="button" onClick={() => requestProtectedAction("cancel")} className="rounded-lg border border-red-200 bg-white px-3 py-2 text-xs font-semibold text-red-700 hover:bg-red-50">
                                 Cancel a booking
                             </button>
+                            <button type="button" onClick={exitAssistant} className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100">
+                                Exit
+                            </button>
                         </div>
                     </div>
-
-                    <button
-                        type="button"
-                        onClick={() => {
-                            setFlow(null);
-                            appendLocalAssistant(
-                                "Thank you for booking with SkyRoute. Have a pleasant journey, and come back anytime you need help with another flight."
-                            );
-                        }}
-                        className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 font-semibold text-slate-700"
-                    >
-                        Finish
-                    </button>
                 </div>
             );
         }
@@ -1044,6 +1044,7 @@ export default function AssistantWidget() {
         authenticationComplete,
         flow,
         appendLocalAssistant,
+        exitAssistant,
         refreshBookings,
         requestProtectedAction,
     ]);
@@ -1105,6 +1106,7 @@ export default function AssistantWidget() {
                     onBookingChanged={
                         refreshBookings
                     }
+                    onExit={exitAssistant}
                     onAuthenticationRequired={requestProtectedAction}
                     onAuthenticate={setAuthMode}
                     onChangeFlightDate={handleModalSearch}

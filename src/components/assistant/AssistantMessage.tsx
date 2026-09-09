@@ -1,5 +1,5 @@
-import { useRef, useState } from "react";
-import { Bot, CalendarDays, LogIn, Plane, Trash2 } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Bot, BookOpen, CalendarDays, LogIn, LogOut, Plane, Trash2 } from "lucide-react";
 import type { AssistantUiMessage } from "../../types/Assistant";
 import type { Flight } from "../../types/Flight";
 import type { Airport } from "../../types/Airport";
@@ -17,6 +17,9 @@ interface Props {
     onAuthenticate: (mode: "login" | "register") => void;
     onChangeFlightDate: (origin: Airport, destination: Airport, date: string) => void;
     onCreateBooking: () => void;
+    onViewBookings: () => void;
+    onExit: () => void;
+    bookingAction: "view" | "cancel";
 }
 
 export default function AssistantMessage({
@@ -28,15 +31,24 @@ export default function AssistantMessage({
     onAuthenticate,
     onChangeFlightDate,
     onCreateBooking,
+    onViewBookings,
+    onExit,
+    bookingAction,
 }: Props) {
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [flightDate, setFlightDate] = useState("");
+    const [currentBookingAction, setCurrentBookingAction] =
+        useState(bookingAction);
     const bookingResultsRef = useRef<HTMLDivElement>(null);
     const assistant = item.role === "assistant";
     const data = item.response;
     const displayedText = assistant
         ? formatAssistantText(item.text, data)
         : item.text;
+
+    useEffect(() => {
+        setCurrentBookingAction(bookingAction);
+    }, [bookingAction]);
 
     const showAirportResults =
         Boolean(data?.airports.length) && !data?.flights.length;
@@ -175,7 +187,10 @@ export default function AssistantMessage({
                             <BookingCard
                                 key={booking.id}
                                 booking={booking}
-                                onChanged={onBookingChanged}
+                                onChanged={() => {
+                                    setCurrentBookingAction("cancel");
+                                    onBookingChanged();
+                                }}
                             />
                         ))}
                     </div>
@@ -184,20 +199,37 @@ export default function AssistantMessage({
                         <p className="text-xs font-medium text-blue-900">
                             What would you like to do next?
                         </p>
-                        <div className="mt-2 grid grid-cols-2 gap-2">
+                        <div className="mt-2 grid grid-cols-3 gap-2">
                         <button
                             type="button"
                             onClick={onCreateBooking}
                             className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-blue-600 px-3 py-2.5 text-xs font-semibold text-white hover:bg-blue-700"
                         >
-                            <Plane size={14} /> Create new booking
+                            <Plane size={12} /> Create booking
                         </button>
+                        {currentBookingAction === "view" ? (
+                            <button
+                                type="button"
+                                onClick={focusFirstCancelButton}
+                                className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-red-200 bg-white px-2 py-2.5 text-xs font-semibold text-red-700 hover:bg-red-50"
+                            >
+                                <Trash2 size={14} /> Cancel booking
+                            </button>
+                        ) : (
+                            <button
+                                type="button"
+                                onClick={onViewBookings}
+                                className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-blue-200 bg-white px-2 py-2.5 text-xs font-semibold text-blue-700 hover:bg-blue-50"
+                            >
+                                <BookOpen size={14} /> View bookings
+                            </button>
+                        )}
                         <button
                             type="button"
-                            onClick={focusFirstCancelButton}
-                            className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-red-200 bg-white px-3 py-2.5 text-xs font-semibold text-red-700 hover:bg-red-50"
+                            onClick={onExit}
+                            className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-slate-300 bg-white px-2 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-100"
                         >
-                            <Trash2 size={14} /> Cancel a booking
+                            <LogOut size={14} /> Exit
                         </button>
                         </div>
                     </div>

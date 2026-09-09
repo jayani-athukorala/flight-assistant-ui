@@ -27,6 +27,7 @@ interface Props {
     onAuthenticationRequired: (purpose: "view" | "cancel") => void;
     onAuthenticate: (mode: "login" | "register") => void;
     onChangeFlightDate: (origin: Airport, destination: Airport, date: string) => void;
+    onExit: () => void;
 }
 
 export default function AssistantPanel(props: Props) {
@@ -79,7 +80,7 @@ export default function AssistantPanel(props: Props) {
 
             <nav aria-label="Assistant quick actions" className="grid grid-cols-3 gap-1.5 border-t border-slate-200 bg-white px-3 py-2.5">
                 <button type="button" disabled={props.loading} onClick={props.onOpenFlightSearch} className="inline-flex min-h-10 items-center justify-center gap-1 rounded-lg bg-blue-600 px-2 text-[11px] font-semibold text-white hover:bg-blue-700 disabled:opacity-50">
-                    <Search size={14} /> Search Flights
+                    <Search size={14} /> Search
                 </button>
                 <button type="button" disabled={props.loading} onClick={viewBookings} className="inline-flex min-h-10 items-center justify-center gap-1 rounded-lg border border-slate-200 bg-white px-2 text-[11px] font-semibold text-slate-700 hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 disabled:opacity-50">
                     <BookOpen size={14} /> View bookings
@@ -102,7 +103,17 @@ export default function AssistantPanel(props: Props) {
                     </div>
                 )}
 
-                {props.messages.map((message) => (
+                {props.messages.map((message, index) => {
+                    const previousUserText = props.messages
+                        .slice(0, index)
+                        .findLast((candidate) => candidate.role === "user")
+                        ?.text.toLowerCase() ?? "";
+
+                    const bookingAction = previousUserText.includes("cancel")
+                        ? "cancel" as const
+                        : "view" as const;
+
+                    return (
                     <AssistantMessage
                         key={message.id}
                         item={message}
@@ -113,8 +124,12 @@ export default function AssistantPanel(props: Props) {
                         onAuthenticate={props.onAuthenticate}
                         onChangeFlightDate={props.onChangeFlightDate}
                         onCreateBooking={props.onOpenFlightSearch}
+                        onViewBookings={viewBookings}
+                        onExit={props.onExit}
+                        bookingAction={bookingAction}
                     />
-                ))}
+                    );
+                })}
 
                 {props.workflow}
 
