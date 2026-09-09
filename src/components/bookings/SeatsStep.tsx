@@ -62,7 +62,7 @@ interface SeatLoadResult {
 
 const priceFormatter = new Intl.NumberFormat("en-IE", {
     style: "currency",
-    currency: "EUR",
+    currency: "SEK",
 });
 
 const flightRouteLabel = (flight: Flight): string =>

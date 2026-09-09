@@ -1207,11 +1207,11 @@ const BookingForm = ({
                                 Total
                             </span>
 
-                                <span className="text-3xl font-bold text-blue-600">
-                                €
-                                    {totalPrice.toFixed(
-                                        2
-                                    )}
+                            <span className="text-3xl font-bold text-blue-600">
+                                {new Intl.NumberFormat("sv-SE", {
+                                    style: "currency",
+                                    currency: "SEK",
+                                }).format(totalPrice)}
                             </span>
 
                             </div>
